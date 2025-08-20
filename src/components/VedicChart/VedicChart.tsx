@@ -16,7 +16,7 @@ const VedicChart: Component<VedicChartProps> = (props) => {
   });
 
   return (
-    <div class="vedic-chart">
+    <div class={`vedic-chart ${props.theme || ''}`}>
       {(props.style || 'north') === 'north' ? (
         <NorthIndianChart {...chartProps()} />
       ) : (

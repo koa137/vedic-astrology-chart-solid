@@ -1,0 +1,144 @@
+/* Vedic Chart Default Styles */
+.vedic-chart {
+  display: inline-block;
+  font-family: Arial, sans-serif;
+}
+
+/* Chart container */
+.vedic-chart svg {
+  background-color: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* House labels */
+.vedic-chart .house-label {
+  font-size: 12px;
+  fill: #666666;
+  font-weight: bold;
+  user-select: none;
+}
+
+/* Planet text styling */
+.vedic-chart .planet-text {
+  font-size: 14px;
+  font-weight: bold;
+  user-select: none;
+}
+
+.vedic-chart .planet-details {
+  font-size: 12px;
+  font-weight: normal;
+  fill: #666666;
+}
+
+/* Ascendant marker */
+.vedic-chart .ascendant-text {
+  font-size: 14px;
+  font-weight: bold;
+  fill: #000000;
+  user-select: none;
+}
+
+/* Chart structure */
+.vedic-chart .chart-lines {
+  stroke: #333333;
+  stroke-width: 1.5;
+  fill: none;
+}
+
+.vedic-chart .chart-border {
+  stroke: #333333;
+  stroke-width: 2;
+  fill: none;
+}
+
+/* Specific line types for more control */
+.vedic-chart .diamond-lines {
+  stroke: inherit;
+  stroke-width: inherit;
+}
+
+.vedic-chart .diagonal-lines {
+  stroke: inherit;
+  stroke-width: inherit;
+}
+
+/* Planet colors - can be overridden */
+.vedic-chart .planet-sun {
+  fill: #ff0000;
+}
+.vedic-chart .planet-moon {
+  fill: #000000;
+}
+.vedic-chart .planet-mars {
+  fill: #cc0000;
+}
+.vedic-chart .planet-mercury {
+  fill: #008000;
+}
+.vedic-chart .planet-jupiter {
+  fill: #ff8c00;
+}
+.vedic-chart .planet-venus {
+  fill: #ff69b4;
+}
+.vedic-chart .planet-saturn {
+  fill: #4b0082;
+}
+.vedic-chart .planet-rahu {
+  fill: #800080;
+}
+.vedic-chart .planet-ketu {
+  fill: #8b4513;
+}
+.vedic-chart .planet-uranus {
+  fill: #16a085;
+}
+.vedic-chart .planet-neptune {
+  fill: #2980b9;
+}
+.vedic-chart .planet-pluto {
+  fill: #7f8c8d;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .vedic-chart .planet-text {
+    font-size: 12px;
+  }
+
+  .vedic-chart .planet-details {
+    font-size: 10px;
+  }
+
+  .vedic-chart .house-label {
+    font-size: 10px;
+  }
+}
+
+/* Dark theme */
+.vedic-chart.dark-theme {
+  background-color: #1a1a1a;
+}
+
+.vedic-chart.dark-theme svg {
+  background-color: #2d2d2d;
+}
+
+.vedic-chart.dark-theme .house-label {
+  fill: #cccccc;
+}
+
+.vedic-chart.dark-theme .chart-lines,
+.vedic-chart.dark-theme .chart-border {
+  stroke: #cccccc;
+}
+
+.vedic-chart.dark-theme .planet-details {
+  fill: #aaaaaa;
+}
+
+.vedic-chart.dark-theme .ascendant-text {
+  fill: #ffffff;
+}

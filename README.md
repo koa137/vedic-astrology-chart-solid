@@ -28,6 +28,28 @@ bun add vedic-astrology-chart-solid
 yarn add vedic-astrology-chart-solid
 ```
 
+### Include Styles (Optional)
+
+```tsx
+// Import the component
+import { VedicChart } from 'vedic-astrology-chart-solid';
+
+// Option 1: Import CSS file (if your bundler supports it)
+import 'vedic-astrology-chart-solid/styles';
+
+// Option 2: Use the CSS string export
+import { VedicChart, defaultStyles } from 'vedic-astrology-chart-solid';
+
+function MyApp() {
+  return (
+    <>
+      <style>{defaultStyles}</style>
+      <VedicChart {...chartData} />
+    </>
+  );
+}
+```
+
 ## Quick Start
 
 ```tsx
@@ -63,11 +85,10 @@ function MyChart() {
 ```
 
 ## Example Charts
+
 <img width="625" height="759" alt="Screenshot 2025-08-20 at 14 12 14" src="https://github.com/user-attachments/assets/6bf7882c-2247-47b7-88b5-a95e60213a30" />
 
 <img width="625" height="736" alt="Screenshot 2025-08-20 at 14 12 32" src="https://github.com/user-attachments/assets/60016f0d-f3f0-4018-ab93-a66d2b834e14" />
-
-
 
 ## API Reference
 
@@ -178,6 +199,30 @@ The component uses built-in colors for planets, but you can override styles by t
 .vedic-chart svg tspan[fill='#FF6B35'] {
   fill: #ff0000; /* Custom Sun color */
 }
+
+/* Chart structure - more specific classes */
+.vedic-chart .chart-lines {
+  stroke: #333333;
+  stroke-width: 1.5;
+  fill: none;
+}
+
+.vedic-chart .chart-border {
+  stroke: #333333;
+  stroke-width: 2;
+  fill: none;
+}
+
+/* Specific line types for more control */
+.vedic-chart .diamond-lines {
+  stroke: inherit;
+  stroke-width: inherit;
+}
+
+.vedic-chart .diagonal-lines {
+  stroke: inherit;
+  stroke-width: inherit;
+}
 ```
 
 ## Planet Display Modes
@@ -221,6 +266,252 @@ The component uses built-in colors for planets, but you can override styles by t
 - Traditional South Indian format
 - Fixed house positions
 - Leo always in the top-left corner
+
+## Styling and Customization
+
+### Include Default Styles
+
+```tsx
+import { VedicChart } from 'vedic-astrology-chart-solid';
+import 'vedic-astrology-chart-solid/styles';
+
+function MyChart() {
+  return <VedicChart {...chartData} />;
+}
+```
+
+### Using the CSS String Export
+
+```tsx
+import { VedicChart, defaultStyles } from 'vedic-astrology-chart-solid';
+
+function MyChart() {
+  return (
+    <>
+      <style>{defaultStyles}</style>
+      <VedicChart {...chartData} />
+    </>
+  );
+}
+```
+
+### Custom Styling
+
+You can customize the appearance using CSS classes:
+
+```css
+/* Override planet colors */
+.vedic-chart .planet-sun {
+  fill: #ff4444;
+}
+.vedic-chart .planet-jupiter {
+  fill: #44ff44;
+}
+.vedic-chart .planet-moon {
+  fill: #2196f3;
+}
+
+/* Customize chart appearance */
+.vedic-chart svg {
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  border: 2px solid #ddd;
+}
+
+/* Change font sizes */
+.vedic-chart .planet-text {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.vedic-chart .house-label {
+  font-size: 14px;
+  fill: #333;
+}
+
+/* Customize chart lines */
+.vedic-chart .chart-border {
+  stroke: #666;
+  stroke-width: 3;
+}
+
+.vedic-chart .chart-lines {
+  stroke: #999;
+  stroke-width: 2;
+}
+```
+
+### Dark Theme
+
+```tsx
+<VedicChart {...chartData} theme="dark-theme" />
+```
+
+Or apply dark theme styles manually:
+
+```css
+/* Dark theme customization */
+.my-dark-chart svg {
+  background-color: #1a1a1a;
+}
+
+.my-dark-chart .house-label {
+  fill: #cccccc;
+}
+
+.my-dark-chart .chart-lines,
+.my-dark-chart .chart-border {
+  stroke: #666666;
+}
+
+.my-dark-chart .planet-details {
+  fill: #aaaaaa;
+}
+```
+
+### Available CSS Classes
+
+| Class              | Description                                              |
+| ------------------ | -------------------------------------------------------- |
+| `.vedic-chart`     | Main container wrapper                                   |
+| `.vedic-chart-svg` | SVG element                                              |
+| `.planet-text`     | Planet symbols/names                                     |
+| `.planet-symbol`   | Individual planet symbol                                 |
+| `.planet-details`  | Planet degrees and signs                                 |
+| `.house-label`     | Zodiac sign numbers                                      |
+| `.ascendant-text`  | Ascendant marker text                                    |
+| `.chart-lines`     | Chart structure lines                                    |
+| `.chart-border`    | Outer border                                             |
+| `.planet-[name]`   | Individual planets (e.g., `.planet-sun`, `.planet-mars`) |
+
+### Planet-Specific Classes
+
+Target individual planets with these classes:
+
+```css
+.vedic-chart .planet-sun {
+  fill: #ff6b35;
+} /* Sun */
+.vedic-chart .planet-moon {
+  fill: #1a1a2e;
+} /* Moon */
+.vedic-chart .planet-mars {
+  fill: #dc3545;
+} /* Mars */
+.vedic-chart .planet-mercury {
+  fill: #28a745;
+} /* Mercury */
+.vedic-chart .planet-jupiter {
+  fill: #ffc107;
+} /* Jupiter */
+.vedic-chart .planet-venus {
+  fill: #e91e63;
+} /* Venus */
+.vedic-chart .planet-saturn {
+  fill: #6f42c1;
+} /* Saturn */
+.vedic-chart .planet-rahu {
+  fill: #9c27b0;
+} /* Rahu */
+.vedic-chart .planet-ketu {
+  fill: #8d6e63;
+} /* Ketu */
+```
+
+### Responsive Design
+
+The component includes responsive breakpoints. Customize them:
+
+```css
+@media (max-width: 768px) {
+  .vedic-chart .planet-text {
+    font-size: 12px;
+  }
+
+  .vedic-chart .planet-details {
+    font-size: 10px;
+  }
+
+  .vedic-chart .house-label {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .vedic-chart svg {
+    border-radius: 4px;
+  }
+
+  .vedic-chart .planet-text {
+    font-size: 10px;
+  }
+}
+```
+
+### CSS Custom Properties
+
+For easy theming, you can use CSS variables:
+
+```css
+:root {
+  --vedic-bg: #ffffff;
+  --vedic-border: #333333;
+  --vedic-text: #000000;
+  --vedic-planet-sun: #ff0000;
+  --vedic-planet-moon: #000000;
+  /* ... more custom properties */
+}
+
+.vedic-chart svg {
+  background-color: var(--vedic-bg);
+}
+
+.vedic-chart .chart-border {
+  stroke: var(--vedic-border);
+}
+
+.vedic-chart .planet-sun {
+  fill: var(--vedic-planet-sun);
+}
+```
+
+### Advanced Styling Examples
+
+#### Gradient Backgrounds
+
+```css
+.vedic-chart svg {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+```
+
+#### Custom Fonts
+
+```css
+.vedic-chart {
+  font-family: 'Noto Sans Devanagari', 'Arial', sans-serif;
+}
+```
+
+#### Shadow Effects
+
+```css
+.vedic-chart svg {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+```
+
+#### Animation
+
+```css
+.vedic-chart .planet-text {
+  transition: transform 0.2s ease;
+}
+
+.vedic-chart .planet-text:hover {
+  transform: scale(1.1);
+}
+```
 
 ## Development
 

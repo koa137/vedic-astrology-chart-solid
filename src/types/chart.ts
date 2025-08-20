@@ -11,6 +11,7 @@ export interface VedicChartData {
 
 export interface VedicChartProps extends VedicChartData {
   style?: ChartStyle;
+  theme?: 'light' | 'dark' | 'custom' | string;
   width?: number;
   height?: number;
   showHouseLabels?: boolean;

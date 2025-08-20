@@ -33,3 +33,46 @@ export {
 
 // Sample data export
 export { sampleChartData } from './data';
+
+// CSS export - users can import this
+export const defaultStyles = `
+.vedic-chart {
+  display: inline-block;
+  font-family: Arial, sans-serif;
+}
+
+.vedic-chart svg {
+  background-color: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.vedic-chart .house-label {
+  font-size: 12px;
+  fill: #666666;
+  font-weight: bold;
+  user-select: none;
+}
+
+.vedic-chart .planet-text {
+  font-size: 14px;
+  font-weight: bold;
+  user-select: none;
+}
+
+.vedic-chart .planet-details {
+  font-size: 12px;
+  font-weight: normal;
+  fill: #666666;
+}
+
+.vedic-chart .planet-sun { fill: #FF0000; }
+.vedic-chart .planet-moon { fill: #000000; }
+.vedic-chart .planet-mars { fill: #CC0000; }
+.vedic-chart .planet-mercury { fill: #008000; }
+.vedic-chart .planet-jupiter { fill: #FF8C00; }
+.vedic-chart .planet-venus { fill: #FF69B4; }
+.vedic-chart .planet-saturn { fill: #4B0082; }
+.vedic-chart .planet-rahu { fill: #800080; }
+.vedic-chart .planet-ketu { fill: #8B4513; }
+`;

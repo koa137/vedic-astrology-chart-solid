@@ -5,11 +5,8 @@ import {
   getPlanetDegree,
   getPlanetDisplay,
 } from '../../utils';
-import {
-  formatAscendantDegree,
-  getAscendantSign,
-  getPlanetColor,
-} from './utils/helpers';
+import { formatAscendantDegree, getAscendantSign } from './utils/helpers';
+import '../../styles/vedic-chart.css';
 
 type ChartProps = Omit<VedicChartProps, 'style'>;
 
@@ -155,6 +152,7 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
       width={props.width || 600}
       height={props.height || 600}
       viewBox={`0 0 ${props.width || 600} ${props.height || 600}`}
+      class="vedic-chart-svg"
     >
       {/* Outer square */}
       <rect
@@ -163,51 +161,75 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
         width={size() * 0.8}
         height={size() * 0.8}
         fill="none"
-        stroke="#333"
-        stroke-width="2"
+        class="chart-border"
       />
 
-      {/* House division lines - only diagonals */}
-      <g stroke="#333" stroke-width="1.5" fill="none">
-        {/* Diagonal lines creating the diamond pattern */}
-        <line
-          x1={centerX() - size() * 0.4}
-          y1={centerY() - size() * 0.4}
-          x2={centerX() + size() * 0.4}
-          y2={centerY() + size() * 0.4}
-        />
-        <line
-          x1={centerX() + size() * 0.4}
-          y1={centerY() - size() * 0.4}
-          x2={centerX() - size() * 0.4}
-          y2={centerY() + size() * 0.4}
-        />
+      {/* House division lines */}
+      <g class="chart-lines">
+        {/* Outer diamond lines (4 corners to center) */}
+        <g class="diamond-lines">
+          <line
+            x1={centerX() - size() * 0.4}
+            y1={centerY()}
+            x2={centerX()}
+            y2={centerY() - size() * 0.4}
+          />
+          <line
+            x1={centerX()}
+            y1={centerY() - size() * 0.4}
+            x2={centerX() + size() * 0.4}
+            y2={centerY()}
+          />
+          <line
+            x1={centerX() + size() * 0.4}
+            y1={centerY()}
+            x2={centerX()}
+            y2={centerY() + size() * 0.4}
+          />
+          <line
+            x1={centerX()}
+            y1={centerY() + size() * 0.4}
+            x2={centerX() - size() * 0.4}
+            y2={centerY()}
+          />
+        </g>
 
-        {/* Central diamond that touches the square at 4 points */}
-        <path
-          d={`M ${centerX()} ${centerY() - size() * 0.4}
-              L ${centerX() + size() * 0.4} ${centerY()}
-              L ${centerX()} ${centerY() + size() * 0.4}
-              L ${centerX() - size() * 0.4} ${centerY()}
-              Z`}
-          fill="none"
-          stroke="#333"
-          stroke-width="1.5"
-        />
+        {/* Inner diamond lines (corner to corner diagonals) */}
+        <g class="diagonal-lines">
+          <line
+            x1={centerX() - size() * 0.4}
+            y1={centerY() - size() * 0.4}
+            x2={centerX() + size() * 0.4}
+            y2={centerY() + size() * 0.4}
+          />
+          <line
+            x1={centerX() - size() * 0.4}
+            y1={centerY() + size() * 0.4}
+            x2={centerX() + size() * 0.4}
+            y2={centerY() - size() * 0.4}
+          />
+        </g>
       </g>
+
+      {/* Cross lines (horizontal and vertical through center) */}
+      <line
+        x1={centerX() - size() * 0.4}
+        y1={centerY()}
+        x2={centerX() + size() * 0.4}
+        y2={centerY()}
+      />
+      <line
+        x1={centerX()}
+        y1={centerY() - size() * 0.4}
+        x2={centerX()}
+        y2={centerY() + size() * 0.4}
+      />
 
       {/* House Numbers */}
       <Show when={props.showHouseLabels ?? true}>
         <For each={houseNumberPositions()}>
           {({ x, y, label }) => (
-            <text
-              x={x}
-              y={y}
-              text-anchor="middle"
-              font-size="12"
-              fill="#333"
-              font-weight="bold"
-            >
+            <text x={x} y={y} text-anchor="middle" class="house-label">
               {label}
             </text>
           )}
@@ -234,7 +256,6 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
                     const totalHeight = (totalItems - 1) * itemSpacing;
                     const startY = centroid!.y - totalHeight / 2;
 
-                    // Create a reactive computation for the Y position
                     const planetY = () => {
                       const adjustedIndex = isFirstHouse
                         ? planetIndex() + 1
@@ -247,16 +268,15 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
                         x={planetX}
                         y={planetY()}
                         text-anchor="middle"
-                        font-size="14"
-                        fill={getPlanetColor(planetName)}
+                        class={`planet-text planet-${planetName.toLowerCase()}`}
                       >
-                        <tspan font-weight="bold">
+                        <tspan class="planet-symbol">
                           {getPlanetDisplay(
                             planetName,
                             props.planetDisplayMode || 'symbols'
                           )}
                         </tspan>
-                        <tspan font-weight="normal" fill="#666">
+                        <tspan class="planet-details">
                           {' '}
                           {house.sign.substring(0, 3)}{' '}
                           {getPlanetDegree(
@@ -288,7 +308,6 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
           const firstHouseCentroid = planetCentroids().find(
             (c) => c.num === 1
           )!;
-
           const totalItems = firstHouse.planets.length + 1;
           const itemSpacing = 18;
           const totalHeight = (totalItems - 1) * itemSpacing;
@@ -299,13 +318,11 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
             <text
               x={firstHouseCentroid.x}
               y={ascendantY}
-              font-size="14"
-              fill="black"
-              font-weight="bold"
               text-anchor="middle"
+              class="ascendant-text"
             >
-              <tspan font-weight="bold">ASC</tspan>
-              <tspan font-weight="normal" fill="#666">
+              <tspan>ASC</tspan>
+              <tspan class="planet-details">
                 {' '}
                 {getAscendantSign(props.ascendant)}{' '}
                 {formatAscendantDegree(props.ascendant)}
