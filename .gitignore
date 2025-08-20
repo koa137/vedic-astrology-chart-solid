@@ -16,7 +16,7 @@ coverage/
 .nyc_output
 
 # IDE
-.vscode/
+.vscode/settings.json
 .idea/
 *.sublime-*
 .DS_Store
@@ -39,3 +39,6 @@ logs/
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
+
+# ESLint cache
+.eslintcache
