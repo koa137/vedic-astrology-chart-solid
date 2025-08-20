@@ -27,3 +27,6 @@ const VedicChart: Component<VedicChartProps> = (props) => {
 };
 
 export default VedicChart;
+
+// Named export for alternative import style
+export { VedicChart };

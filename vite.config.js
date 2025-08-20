@@ -3,7 +3,9 @@ import solid from 'vite-plugin-solid';
 import { resolve } from 'path';
 import { fileURLToPath } from 'url';
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
+const __dirname = fileURLToPath(
+  new (globalThis.URL || require('url').URL)('.', import.meta.url)
+);
 
 export default defineConfig({
   plugins: [solid()],

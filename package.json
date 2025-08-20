@@ -1,6 +1,6 @@
 {
   "name": "vedic-astrology-chart-solid",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Beautiful Vedic (Jyotish) astrology chart component for SolidJS",
   "main": "dist/index.js",
@@ -12,11 +12,7 @@
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
-    "./types": {
-      "import": "./dist/types/index.js",
-      "require": "./dist/types/index.js",
-      "types": "./dist/types/index.d.ts"
-    }
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",
@@ -32,8 +28,8 @@
   },
   "homepage": "https://github.com/koa137/vedic-astrology-chart-solid#readme",
   "scripts": {
-    "build": "vite build",
-    "build:types": "tsc --emitDeclarationOnly",
+    "build": "vite build && npm run build:types",
+    "build:types": "tsc --project tsconfig.build.json",
     "dev": "vite",
     "dev:demo": "vite --config vite.demo.config.js",
     "test": "vitest",
@@ -60,7 +56,7 @@
     "sidereal",
     "typescript"
   ],
-  "author": "Your Name <your.email@example.com>",
+  "author": "koa137",
   "license": "MIT",
   "peerDependencies": {
     "solid-js": "^1.8.0"
