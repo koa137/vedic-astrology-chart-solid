@@ -2,17 +2,30 @@
   "name": "vedic-astrology-chart-solid",
   "version": "0.1.0",
   "type": "module",
-  "description": "Beautiful Vedic (Jyotish) astrology chart component for Solid JS",
+  "description": "Beautiful Vedic (Jyotish) astrology chart component for SolidJS",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./types": {
+      "import": "./dist/types/index.js",
+      "require": "./dist/types/index.js",
+      "types": "./dist/types/index.d.ts"
+    }
+  },
   "files": [
     "dist",
-    "src"
+    "README.md",
+    "LICENSE"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/koa137/vedic-astrology-chart-solid.git"
+    "url": "git+https://github.com/koa137/vedic-astrology-chart-solid.git"
   },
   "bugs": {
     "url": "https://github.com/koa137/vedic-astrology-chart-solid/issues"
@@ -38,13 +51,16 @@
     "chart",
     "horoscope",
     "solidjs",
+    "solid-js",
     "svg",
     "nakshatras",
     "rashi",
     "navamsa",
-    "hindu-astrology"
+    "hindu-astrology",
+    "sidereal",
+    "typescript"
   ],
-  "author": "Matthew Jones",
+  "author": "Your Name <your.email@example.com>",
   "license": "MIT",
   "peerDependencies": {
     "solid-js": "^1.8.0"
