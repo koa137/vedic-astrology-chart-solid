@@ -31,120 +31,120 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
     return signNumber;
   };
 
-  // House number positions (centered in each triangle/diamond)
+  // House number positions (scaled by 1.25)
   const houseNumberPositions = () => [
     // 1st house
     {
       num: 1,
       x: centerX(),
-      y: centerY() - size() * 0.02,
+      y: centerY() - size() * 0.025, // was 0.02
       label: getHouseSignNumber(1).toString(),
     },
     // 2nd house
     {
       num: 2,
-      x: centerX() - size() * 0.2,
-      y: centerY() - size() * 0.22,
+      x: centerX() - size() * 0.25, // was 0.2
+      y: centerY() - size() * 0.275, // was 0.22
       label: getHouseSignNumber(2).toString(),
     },
     // 3rd house
     {
       num: 3,
-      x: centerX() - size() * 0.23,
-      y: centerY() - size() * 0.192,
+      x: centerX() - size() * 0.2875, // was 0.23
+      y: centerY() - size() * 0.24, // was 0.192
       label: getHouseSignNumber(3).toString(),
     },
     // 4th house
     {
       num: 4,
-      x: centerX() - size() * 0.03,
-      y: centerY() + size() * 0.008,
+      x: centerX() - size() * 0.0375, // was 0.03
+      y: centerY() + size() * 0.01, // was 0.008
       label: getHouseSignNumber(4).toString(),
     },
     // 5th house
     {
       num: 5,
-      x: centerX() - size() * 0.23,
-      y: centerY() + size() * 0.21,
+      x: centerX() - size() * 0.2875, // was 0.23
+      y: centerY() + size() * 0.2625, // was 0.21
       label: getHouseSignNumber(5).toString(),
     },
     // 6th house
     {
       num: 6,
-      x: centerX() - size() * 0.2,
-      y: centerY() + size() * 0.24,
+      x: centerX() - size() * 0.25, // was 0.2
+      y: centerY() + size() * 0.3, // was 0.24
       label: getHouseSignNumber(6).toString(),
     },
     // 7th house
     {
       num: 7,
       x: centerX(),
-      y: centerY() + size() * 0.04,
+      y: centerY() + size() * 0.05, // was 0.04
       label: getHouseSignNumber(7).toString(),
     },
     // 8th house
     {
       num: 8,
-      x: centerX() + size() * 0.2,
-      y: centerY() + size() * 0.24,
+      x: centerX() + size() * 0.25, // was 0.2
+      y: centerY() + size() * 0.3, // was 0.24
       label: getHouseSignNumber(8).toString(),
     },
     // 9th house
     {
       num: 9,
-      x: centerX() + size() * 0.23,
-      y: centerY() + size() * 0.21,
+      x: centerX() + size() * 0.2875, // was 0.23
+      y: centerY() + size() * 0.2625, // was 0.21
       label: getHouseSignNumber(9).toString(),
     },
     // 10th house
     {
       num: 10,
-      x: centerX() + size() * 0.03,
-      y: centerY() + size() * 0.008,
+      x: centerX() + size() * 0.0375, // was 0.03
+      y: centerY() + size() * 0.01, // was 0.008
       label: getHouseSignNumber(10).toString(),
     },
     // 11th house
     {
       num: 11,
-      x: centerX() + size() * 0.23,
-      y: centerY() - size() * 0.192,
+      x: centerX() + size() * 0.2875, // was 0.23
+      y: centerY() - size() * 0.24, // was 0.192
       label: getHouseSignNumber(11).toString(),
     },
     // 12th house
     {
       num: 12,
-      x: centerX() + size() * 0.2,
-      y: centerY() - size() * 0.22,
+      x: centerX() + size() * 0.25, // was 0.2
+      y: centerY() - size() * 0.275, // was 0.22
       label: getHouseSignNumber(12).toString(),
     },
   ];
 
-  // Planet centroid positions
+  // Planet centroid positions (scaled by 1.25)
   const planetCentroids = () => [
     // 1st house
-    { num: 1, x: centerX(), y: centerY() - size() * 0.2 },
+    { num: 1, x: centerX(), y: centerY() - size() * 0.25 }, // was 0.2
     // 2nd house
-    { num: 2, x: centerX() - size() * 0.2, y: centerY() - size() * 0.31 },
+    { num: 2, x: centerX() - size() * 0.25, y: centerY() - size() * 0.3875 }, // was 0.31
     // 3rd house
-    { num: 3, x: centerX() - size() * 0.32, y: centerY() - size() * 0.192 },
+    { num: 3, x: centerX() - size() * 0.4, y: centerY() - size() * 0.24 }, // was 0.32, 0.192
     // 4th house
-    { num: 4, x: centerX() - size() * 0.2, y: centerY() + size() * 0.008 },
+    { num: 4, x: centerX() - size() * 0.25, y: centerY() + size() * 0.01 }, // was 0.2, 0.008
     // 5th house
-    { num: 5, x: centerX() - size() * 0.32, y: centerY() + size() * 0.21 },
+    { num: 5, x: centerX() - size() * 0.4, y: centerY() + size() * 0.2625 }, // was 0.32, 0.21
     // 6th house
-    { num: 6, x: centerX() - size() * 0.2, y: centerY() + size() * 0.32 },
+    { num: 6, x: centerX() - size() * 0.25, y: centerY() + size() * 0.4 }, // was 0.2, 0.32
     // 7th house
-    { num: 7, x: centerX(), y: centerY() + size() * 0.21 },
+    { num: 7, x: centerX(), y: centerY() + size() * 0.2625 }, // was 0.21
     // 8th house
-    { num: 8, x: centerX() + size() * 0.2, y: centerY() + size() * 0.32 },
+    { num: 8, x: centerX() + size() * 0.25, y: centerY() + size() * 0.4 }, // was 0.2, 0.32
     // 9th house
-    { num: 9, x: centerX() + size() * 0.32, y: centerY() + size() * 0.21 },
+    { num: 9, x: centerX() + size() * 0.4, y: centerY() + size() * 0.2625 }, // was 0.32, 0.21
     // 10th house
-    { num: 10, x: centerX() + size() * 0.2, y: centerY() + size() * 0.008 },
+    { num: 10, x: centerX() + size() * 0.25, y: centerY() + size() * 0.01 }, // was 0.2, 0.008
     // 11th house
-    { num: 11, x: centerX() + size() * 0.32, y: centerY() - size() * 0.192 },
+    { num: 11, x: centerX() + size() * 0.4, y: centerY() - size() * 0.24 }, // was 0.32, 0.192
     // 12th house
-    { num: 12, x: centerX() + size() * 0.2, y: centerY() - size() * 0.31 },
+    { num: 12, x: centerX() + size() * 0.25, y: centerY() - size() * 0.3875 }, // was 0.2, 0.31
   ];
 
   return (
@@ -154,12 +154,12 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
       viewBox={`0 0 ${props.width || 600} ${props.height || 600}`}
       class="vedic-chart-svg"
     >
-      {/* Outer square */}
+      {/* Outer square - now fills full space */}
       <rect
-        x={centerX() - size() * 0.4}
-        y={centerY() - size() * 0.4}
-        width={size() * 0.8}
-        height={size() * 0.8}
+        x={centerX() - size() * 0.5}
+        y={centerY() - size() * 0.5}
+        width={size() * 1.0}
+        height={size() * 1.0}
         fill="none"
         class="chart-border"
       />
@@ -169,27 +169,27 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
         {/* Outer diamond lines (4 corners to center) */}
         <g class="diamond-lines">
           <line
-            x1={centerX() - size() * 0.4}
+            x1={centerX() - size() * 0.5}
             y1={centerY()}
             x2={centerX()}
-            y2={centerY() - size() * 0.4}
+            y2={centerY() - size() * 0.5}
           />
           <line
             x1={centerX()}
-            y1={centerY() - size() * 0.4}
-            x2={centerX() + size() * 0.4}
+            y1={centerY() - size() * 0.5}
+            x2={centerX() + size() * 0.5}
             y2={centerY()}
           />
           <line
-            x1={centerX() + size() * 0.4}
+            x1={centerX() + size() * 0.5}
             y1={centerY()}
             x2={centerX()}
-            y2={centerY() + size() * 0.4}
+            y2={centerY() + size() * 0.5}
           />
           <line
             x1={centerX()}
-            y1={centerY() + size() * 0.4}
-            x2={centerX() - size() * 0.4}
+            y1={centerY() + size() * 0.5}
+            x2={centerX() - size() * 0.5}
             y2={centerY()}
           />
         </g>
@@ -197,35 +197,21 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
         {/* Inner diamond lines (corner to corner diagonals) */}
         <g class="diagonal-lines">
           <line
-            x1={centerX() - size() * 0.4}
-            y1={centerY() - size() * 0.4}
-            x2={centerX() + size() * 0.4}
-            y2={centerY() + size() * 0.4}
+            x1={centerX() - size() * 0.5}
+            y1={centerY() - size() * 0.5}
+            x2={centerX() + size() * 0.5}
+            y2={centerY() + size() * 0.5}
           />
           <line
-            x1={centerX() - size() * 0.4}
-            y1={centerY() + size() * 0.4}
-            x2={centerX() + size() * 0.4}
-            y2={centerY() - size() * 0.4}
+            x1={centerX() - size() * 0.5}
+            y1={centerY() + size() * 0.5}
+            x2={centerX() + size() * 0.5}
+            y2={centerY() - size() * 0.5}
           />
         </g>
       </g>
 
-      {/* Cross lines (horizontal and vertical through center) */}
-      <line
-        x1={centerX() - size() * 0.4}
-        y1={centerY()}
-        x2={centerX() + size() * 0.4}
-        y2={centerY()}
-      />
-      <line
-        x1={centerX()}
-        y1={centerY() - size() * 0.4}
-        x2={centerX()}
-        y2={centerY() + size() * 0.4}
-      />
-
-      {/* House Numbers */}
+      {/* House Numbers - scale proportionally */}
       <Show when={props.showHouseLabels ?? true}>
         <For each={houseNumberPositions()}>
           {({ x, y, label }) => (
