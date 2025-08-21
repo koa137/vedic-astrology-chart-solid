@@ -1,32 +1,41 @@
-import { HouseInfo, PlanetaryPositions, PlanetDisplayMode } from '../types';
+import {
+  HouseInfo,
+  PlanetaryPositions,
+  PlanetaryPositionsWithRetrograde,
+  PlanetDisplayMode,
+  PlanetName,
+} from '../types';
 import { degreeToSign, normalizeDegree } from './astroUtils';
 
-// Helper function to normalize Rahu-Ketu opposition
-export function normalizePlanetaryPositions(
-  planets: PlanetaryPositions,
-  allowKetuOverride: boolean = false
-): PlanetaryPositions {
-  const normalized = { ...planets };
+export const normalizePlanetaryPositions = (
+  planets: PlanetaryPositions | PlanetaryPositionsWithRetrograde
+): {
+  positions: PlanetaryPositions;
+  retrogradeInfo: Record<string, boolean>;
+} => {
+  const positions: PlanetaryPositions = {} as PlanetaryPositions;
+  const retrogradeInfo: Record<string, boolean> = {};
 
-  // Only auto-calculate Ketu if override is not allowed and Rahu exists
-  if (!allowKetuOverride && normalized.Rahu !== undefined) {
-    // Ensure Ketu is exactly 180° opposite to Rahu
-    normalized.Ketu = (normalized.Rahu + 180) % 360;
-  }
+  Object.entries(planets).forEach(([planetName, data]) => {
+    if (typeof data === 'number') {
+      positions[planetName as PlanetName] = data;
+      retrogradeInfo[planetName] = false;
+    } else {
+      positions[planetName as PlanetName] = data.position;
+      retrogradeInfo[planetName] = data.isRetrograde || false;
+    }
+  });
 
-  return normalized;
-}
+  return { positions, retrogradeInfo };
+};
 
 export function calculateHouses(
-  planets: PlanetaryPositions,
+  planets: PlanetaryPositions | PlanetaryPositionsWithRetrograde,
   ascendant: number,
   allowKetuOverride: boolean = false
 ): HouseInfo[] {
   // Normalize planetary positions first
-  const normalizedPlanets = normalizePlanetaryPositions(
-    planets,
-    allowKetuOverride
-  );
+  const { positions: normalizedPlanets } = normalizePlanetaryPositions(planets);
 
   const houses: HouseInfo[] = [];
 
@@ -48,7 +57,14 @@ export function calculateHouses(
     // Skip undefined planets (optional outer planets)
     if (degree === undefined) return;
 
-    const planetSignStart = Math.floor(degree / 30) * 30;
+    let planetDegree = degree;
+
+    // Handle Ketu override logic
+    if (planetName === 'Ketu' && !allowKetuOverride) {
+      planetDegree = normalizeDegree(normalizedPlanets.Rahu + 180);
+    }
+
+    const planetSignStart = Math.floor(planetDegree / 30) * 30;
     const ascendantSignIndex = Math.floor(ascendantSignStart / 30);
     const planetSignIndex = Math.floor(planetSignStart / 30);
 
@@ -57,7 +73,7 @@ export function calculateHouses(
 
     const house = houses.find((h) => h.number === houseNumber);
     if (house) {
-      house.planets.push(planetName);
+      house.planets.push(planetName as PlanetName);
     }
   });
 
@@ -100,14 +116,30 @@ export function getPlanetName(planetName: string): string {
   return names[planetName] || planetName.substring(0, 1);
 }
 
-export function getPlanetDisplay(
-  planetName: string,
-  mode: PlanetDisplayMode = 'symbols'
-): string {
-  return mode === 'symbols'
-    ? getPlanetSymbol(planetName)
-    : getPlanetName(planetName);
-}
+export const getPlanetDisplay = (
+  planetName: PlanetName,
+  mode: PlanetDisplayMode,
+  planets?: PlanetaryPositions | PlanetaryPositionsWithRetrograde,
+  showRetrograde: boolean = true
+): string => {
+  const baseDisplay =
+    mode === 'symbols'
+      ? getPlanetSymbol(planetName)
+      : getPlanetName(planetName);
+
+  if (!planets || !showRetrograde) {
+    return baseDisplay;
+  }
+
+  const { retrogradeInfo } = normalizePlanetaryPositions(planets);
+  const isRetrograde = retrogradeInfo[planetName];
+
+  if (isRetrograde) {
+    return `${baseDisplay} Rx`;
+  }
+
+  return baseDisplay;
+};
 
 export function formatDegree(degree: number): string {
   const degreeWithinSign = degree % 30;
@@ -123,32 +155,26 @@ export function formatDegree(degree: number): string {
   return `${wholeDegrees}°${minutes.toString().padStart(2, '0')}'`;
 }
 
-export function getPlanetDegree(
-  planetName: string,
-  planets: PlanetaryPositions,
-  allowKetuOverride: boolean = false
-): string {
-  // Normalize planets first
-  const normalizedPlanets = normalizePlanetaryPositions(
-    planets,
-    allowKetuOverride
-  );
-  let degree = normalizedPlanets[planetName as keyof PlanetaryPositions];
+export const getPlanetDegree = (
+  planetName: PlanetName,
+  planets: PlanetaryPositions | PlanetaryPositionsWithRetrograde,
+  allowKetuOverride: boolean = false,
+  showRetrograde: boolean = true
+): string => {
+  const { positions, retrogradeInfo } = normalizePlanetaryPositions(planets);
 
-  // Return empty string if planet is not provided (optional planets)
-  if (degree === undefined) return '';
+  let degree = positions[planetName];
 
-  // Special handling for Rahu-Ketu to ensure identical degree/minute display
-  // Only if override is not allowed
-  if (
-    !allowKetuOverride &&
-    planetName === 'Ketu' &&
-    normalizedPlanets.Rahu !== undefined
-  ) {
-    const rahuDegree = normalizedPlanets.Rahu;
-    // Calculate Ketu's degree using Rahu's exact position
-    degree = (rahuDegree + 180) % 360;
+  if (planetName === 'Ketu' && !allowKetuOverride) {
+    degree = normalizeDegree(positions.Rahu + 180);
   }
 
-  return formatDegree(degree);
-}
+  const degreeStr = formatDegree(degree!);
+  const isRetrograde = retrogradeInfo[planetName];
+
+  if (showRetrograde && isRetrograde) {
+    return `${degreeStr}`; // ℞ is the retrograde symbol
+  }
+
+  return degreeStr;
+};

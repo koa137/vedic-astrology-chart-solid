@@ -1,14 +1,17 @@
 import { Component, For, Show } from 'solid-js';
-import { VedicChartProps } from '../../types';
+import { PlanetName, VedicChartProps } from '../../types';
 import {
   calculateHouses,
   getPlanetDegree,
   getPlanetDisplay,
+  normalizePlanetaryPositions,
 } from '../../utils';
 import { formatAscendantDegree, getAscendantSign } from './utils/helpers';
 import '../../styles/vedic-chart.css';
 
-type ChartProps = Omit<VedicChartProps, 'style'>;
+type ChartProps = Omit<VedicChartProps, 'style'> & {
+  showRetrograde?: boolean;
+};
 
 const NorthIndianChart: Component<ChartProps> = (props) => {
   const houses = () =>
@@ -234,6 +237,21 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
               <g>
                 <For each={house.planets}>
                   {(planetName, planetIndex) => {
+                    // Get retrograde info
+                    const { retrogradeInfo } = normalizePlanetaryPositions(
+                      props.planets
+                    );
+                    const isRetrograde = retrogradeInfo[planetName];
+
+                    // Build CSS classes
+                    const planetClasses = [
+                      'planet-text',
+                      `planet-${planetName.toLowerCase()}`,
+                      isRetrograde ? 'retrograde' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ');
+
                     const planetX = centroid!.x;
                     const isFirstHouse = house.number === 1;
                     const totalItems =
@@ -254,21 +272,24 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
                         x={planetX}
                         y={planetY()}
                         text-anchor="middle"
-                        class={`planet-text planet-${planetName.toLowerCase()}`}
+                        class={planetClasses} // Apply the dynamic classes
                       >
                         <tspan class="planet-symbol">
                           {getPlanetDisplay(
-                            planetName,
-                            props.planetDisplayMode || 'symbols'
+                            planetName as PlanetName,
+                            props.planetDisplayMode || 'symbols',
+                            props.planets,
+                            props.showRetrograde ?? true
                           )}
                         </tspan>
                         <tspan class="planet-details">
                           {' '}
                           {house.sign.substring(0, 3)}{' '}
                           {getPlanetDegree(
-                            planetName,
+                            planetName as PlanetName,
                             props.planets,
-                            props.allowKetuOverride || false
+                            props.allowKetuOverride || false,
+                            props.showRetrograde ?? true
                           )}
                         </tspan>
                       </text>

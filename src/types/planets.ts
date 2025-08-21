@@ -29,8 +29,24 @@ export interface PlanetaryPositions {
 }
 
 export interface PlanetInfo {
-  name: PlanetName;
+  name?: PlanetName;
   position: number; // degrees 0-360
-  house: number; // 1-12
+  house?: number; // 1-12
   nakshatra?: string;
+  isRetrograde?: boolean;
+}
+
+export interface PlanetaryPositionsWithRetrograde {
+  Sun: number | PlanetInfo;
+  Moon: number | PlanetInfo;
+  Mars: number | PlanetInfo;
+  Mercury: number | PlanetInfo;
+  Jupiter: number | PlanetInfo;
+  Venus: number | PlanetInfo;
+  Saturn: number | PlanetInfo;
+  Rahu: number | PlanetInfo;
+  Ketu: number | PlanetInfo;
+  Uranus?: number | PlanetInfo;
+  Neptune?: number | PlanetInfo;
+  Pluto?: number | PlanetInfo;
 }

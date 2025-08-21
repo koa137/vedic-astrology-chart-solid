@@ -2,15 +2,15 @@ import { VedicChartData } from '../types';
 
 export const sampleChartData: VedicChartData = {
   planets: {
-    Sun: 110.2, // Sidereal positions
-    Moon: 279.5,
-    Mars: 110.1,
-    Mercury: 140.1,
-    Jupiter: 170.2,
+    Sun: 95.5,
+    Moon: 145.2,
+    Mars: { position: 310.7, isRetrograde: true }, // Retrograde Mars
+    Mercury: { position: 108.8, isRetrograde: true }, // Retrograde Mercury
+    Jupiter: 85.2,
     Venus: 200.3,
-    Saturn: 220.5,
-    Rahu: 89.1, // North Node
-    Ketu: 0.0, // South Node
+    Saturn: { position: 270.5, isRetrograde: true }, // Retrograde Saturn
+    Rahu: 42.3,
+    Ketu: 222.3,
     Uranus: 300.0, // Optional outer planets
     Neptune: 320.0,
     Pluto: 340.0,

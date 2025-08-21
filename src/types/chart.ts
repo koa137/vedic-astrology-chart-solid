@@ -1,10 +1,13 @@
-import { PlanetaryPositions } from './planets';
+import {
+  PlanetaryPositions,
+  PlanetaryPositionsWithRetrograde,
+} from './planets';
 
 export type ChartStyle = 'north' | 'south';
 export type PlanetDisplayMode = 'symbols' | 'names';
 
 export interface VedicChartData {
-  planets: PlanetaryPositions;
+  planets: PlanetaryPositions | PlanetaryPositionsWithRetrograde;
   ascendant: number; // degrees 0-360
   ayanamsa?: number; // degrees - optional since it's not used in calculations
 }
@@ -17,6 +20,7 @@ export interface VedicChartProps extends VedicChartData {
   showHouseLabels?: boolean;
   planetDisplayMode?: PlanetDisplayMode;
   allowKetuOverride?: boolean;
+  showRetrograde?: boolean; // Add this new prop
 }
 
 export interface HouseInfo {

@@ -142,3 +142,45 @@
 .vedic-chart.dark-theme .ascendant-text {
   fill: #ffffff;
 }
+
+/* Add to src/styles/vedic-chart.css */
+
+/* Retrograde planet styling */
+.vedic-chart .planet-retrograde {
+  font-style: italic;
+}
+
+.vedic-chart .planet-text.retrograde {
+  opacity: 0.8;
+}
+
+.vedic-chart .planet-text.retrograde .planet-symbol {
+  text-decoration: underline;
+}
+
+/* Different color for retrograde planets */
+.vedic-chart .planet-mars.retrograde {
+  fill: #800000; /* Darker red for retrograde Mars */
+}
+.vedic-chart .planet-mercury.retrograde {
+  fill: #004400; /* Darker green for retrograde Mercury */
+}
+.vedic-chart .planet-jupiter.retrograde {
+  fill: #cc6600; /* Darker orange for retrograde Jupiter */
+}
+.vedic-chart .planet-venus.retrograde {
+  fill: #cc0066; /* Darker pink for retrograde Venus */
+}
+.vedic-chart .planet-saturn.retrograde {
+  fill: #330044; /* Darker purple for retrograde Saturn */
+}
+
+/* Additional retrograde styling */
+.vedic-chart .planet-text.retrograde {
+  opacity: 0.9;
+}
+
+.vedic-chart .planet-text.retrograde .planet-symbol {
+  text-decoration: underline;
+  text-decoration-style: wavy;
+}
