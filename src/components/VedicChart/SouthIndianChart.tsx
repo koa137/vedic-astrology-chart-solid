@@ -1,17 +1,17 @@
 import { Component, For, Show } from 'solid-js';
-import { VedicChartProps } from '../../types';
+import { PlanetName, VedicChartProps } from '../../types';
 import {
   calculateHouses,
   getPlanetDegree,
   getPlanetDisplay,
+  normalizePlanetaryPositions, // Add this import
 } from '../../utils';
-import {
-  formatAscendantDegree,
-  getAscendantSign,
-  getPlanetColor,
-} from './utils/helpers';
+import { formatAscendantDegree, getAscendantSign } from './utils/helpers';
+import '../../styles/vedic-chart.css';
 
-type ChartProps = Omit<VedicChartProps, 'style'>;
+type ChartProps = Omit<VedicChartProps, 'style'> & {
+  showRetrograde?: boolean; // Add showRetrograde prop
+};
 
 const SouthIndianChart: Component<ChartProps> = (props) => {
   const houses = () =>
@@ -62,9 +62,10 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
       width={props.width || 600}
       height={props.height || 600}
       viewBox={`0 0 ${props.width || 600} ${props.height || 600}`}
+      class="vedic-chart-svg"
     >
       {/* Grid lines */}
-      <g stroke="#666" stroke-width="1" fill="none">
+      <g class="chart-lines">
         {/* Horizontal lines */}
         <For each={[0, 1, 2, 3, 4]}>
           {(i) => (
@@ -87,30 +88,6 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
             />
           )}
         </For>
-        {/* Diagonal lines for corner houses */}
-        <line x1={0} y1={0} x2={cellWidth()} y2={cellHeight()} />{' '}
-        {/* House 7 */}
-        <line
-          x1={3 * cellWidth()}
-          y1={0}
-          x2={4 * cellWidth()}
-          y2={cellHeight()}
-        />{' '}
-        {/* House 10 */}
-        <line
-          x1={3 * cellWidth()}
-          y1={3 * cellHeight()}
-          x2={4 * cellWidth()}
-          y2={4 * cellHeight()}
-        />{' '}
-        {/* House 1 */}
-        <line
-          x1={0}
-          y1={3 * cellHeight()}
-          x2={cellWidth()}
-          y2={4 * cellHeight()}
-        />{' '}
-        {/* House 4 */}
       </g>
 
       {/* House content */}
@@ -129,9 +106,8 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
                 <text
                   x={center.x - cellWidth() * 0.3}
                   y={center.y - cellHeight() * 0.3}
-                  font-size="12"
-                  fill="#666"
-                  font-weight="bold"
+                  text-anchor="middle"
+                  class="house-label"
                 >
                   {getHouseSignNumber(house.number)}
                 </text>
@@ -139,6 +115,21 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
 
               <For each={house.planets}>
                 {(planetName, planetIndex) => {
+                  // Get retrograde info
+                  const { retrogradeInfo } = normalizePlanetaryPositions(
+                    props.planets
+                  );
+                  const isRetrograde = retrogradeInfo[planetName];
+
+                  // Build CSS classes
+                  const planetClasses = [
+                    'planet-text',
+                    `planet-${planetName.toLowerCase()}`,
+                    isRetrograde ? 'retrograde' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ');
+
                   const planetX = center.x;
                   const totalHeight = (totalItems - 1) * itemSpacing;
                   const startY = center.y - totalHeight / 2;
@@ -156,22 +147,24 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
                       x={planetX}
                       y={planetY()}
                       text-anchor="middle"
-                      font-size="16"
-                      fill={getPlanetColor(planetName)}
+                      class={planetClasses} // Use CSS classes instead of inline styles
                     >
-                      <tspan font-weight="bold">
+                      <tspan class="planet-symbol">
                         {getPlanetDisplay(
-                          planetName,
-                          props.planetDisplayMode || 'symbols'
+                          planetName as PlanetName,
+                          props.planetDisplayMode || 'symbols',
+                          props.planets,
+                          props.showRetrograde ?? true
                         )}
                       </tspan>
-                      <tspan font-weight="normal" fill="#666">
+                      <tspan class="planet-details">
                         {' '}
                         {house.sign.substring(0, 3)}{' '}
                         {getPlanetDegree(
-                          planetName,
+                          planetName as PlanetName,
                           props.planets,
-                          props.allowKetuOverride || false
+                          props.allowKetuOverride || false,
+                          props.showRetrograde ?? true
                         )}
                       </tspan>
                     </text>
@@ -209,11 +202,10 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
               x={firstHouseCenter.x}
               y={ascendantY}
               text-anchor="middle"
-              font-size="16"
-              fill="black"
+              class="ascendant-text"
             >
-              <tspan font-weight="bold">ASC</tspan>
-              <tspan font-weight="normal" fill="#666">
+              <tspan>ASC</tspan>
+              <tspan class="planet-details">
                 {' '}
                 {getAscendantSign(props.ascendant)}{' '}
                 {formatAscendantDegree(props.ascendant)}
