@@ -2,6 +2,7 @@ import { Component, For, Show } from 'solid-js';
 import { PlanetName, VedicChartProps } from '../../types';
 import {
   calculateHouses,
+  degreeToSign,
   getPlanetDegree,
   getPlanetDisplay,
   normalizePlanetaryPositions,
@@ -13,13 +14,47 @@ type ChartProps = Omit<VedicChartProps, 'style'> & {
   showRetrograde?: boolean;
 };
 
+// Measure rendered label widths (bold symbol + normal details) so a house can
+// be centred on its widest label while every label shares one left start.
+let measureCtx: CanvasRenderingContext2D | null | undefined;
+function textWidth(text: string, font: string): number {
+  if (measureCtx === undefined) {
+    measureCtx =
+      typeof document !== 'undefined'
+        ? document.createElement('canvas').getContext('2d')
+        : null;
+  }
+  if (!measureCtx) return text.length * 7; // SSR / no-canvas fallback
+  measureCtx.font = font;
+  return measureCtx.measureText(text).width;
+}
+// Must match .planet-text / .planet-details in vedic-chart.css.
+const SYMBOL_FONT = 'bold 12px Arial, sans-serif';
+const DETAILS_FONT = '10px Arial, sans-serif';
+const labelWidth = (symbol: string, details: string): number =>
+  textWidth(symbol, SYMBOL_FONT) + textWidth(details, DETAILS_FONT);
+
 const NorthIndianChart: Component<ChartProps> = (props) => {
   const houses = () =>
     calculateHouses(
       props.planets,
       props.ascendant,
-      props.allowKetuOverride || false
+      props.allowKetuOverride || false,
+      props.bhavaChalit || false
     );
+
+  // A planet's own sidereal longitude (respecting the Ketu override) and its
+  // sign — used for the label, since in Bhava Chalit a planet's sign differs
+  // from the sign of the house it's drawn in.
+  const planetLongitude = (p: PlanetName): number => {
+    const { positions } = normalizePlanetaryPositions(props.planets);
+    if (p === 'Ketu' && !(props.allowKetuOverride || false)) {
+      return ((positions.Rahu ?? 0) + 180) % 360;
+    }
+    return positions[p] ?? 0;
+  };
+  const planetSign = (p: PlanetName): string =>
+    degreeToSign(planetLongitude(p));
 
   const centerX = () => (props.width || 600) / 2;
   const centerY = () => (props.height || 600) / 2;
@@ -150,6 +185,62 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
     { num: 12, x: centerX() + size() * 0.25, y: centerY() - size() * 0.3875 }, // was 0.2, 0.31
   ];
 
+  // The point the "ASC" marker is drawn at (the real natal ascendant). Defaults
+  // to `ascendant`, but when the chart is rotated to view from another lagna the
+  // caller passes the natal ascendant here so ASC stays at its true position.
+  const ascLongitude = () => props.lagnaMarker ?? props.ascendant;
+  const signOfLon = (lon: number) =>
+    Math.floor((((lon % 360) + 360) % 360) / 30);
+  // Which house the ASC marker falls in given the current (possibly rotated)
+  // house framing. 1 when not rotated.
+  const ascHouseNumber = () =>
+    ((signOfLon(ascLongitude()) - signOfLon(props.ascendant) + 12) % 12) + 1;
+
+  const symbolOf = (p: PlanetName) =>
+    getPlanetDisplay(
+      p,
+      props.planetDisplayMode || 'symbols',
+      props.planets,
+      props.showRetrograde ?? true
+    );
+  const detailsOf = (p: PlanetName) =>
+    ` ${planetSign(p).substring(0, 3)} ${getPlanetDegree(
+      p,
+      props.planets,
+      props.allowKetuOverride || false,
+      props.showRetrograde ?? true
+    )}`;
+
+  // The common left start for every label in a house: centre the block on its
+  // widest label (so a lone planet is centred and stacked planets line up),
+  // clamped so labels can't run off either border.
+  const labelStartX = (house: {
+    number: number;
+    sign: string;
+    planets: string[];
+  }): number => {
+    const centroid = planetCentroids().find((c) => c.num === house.number);
+    if (!centroid) return 0;
+    let maxW = 0;
+    for (const p of house.planets) {
+      maxW = Math.max(
+        maxW,
+        labelWidth(symbolOf(p as PlanetName), detailsOf(p as PlanetName))
+      );
+    }
+    if (house.number === ascHouseNumber()) {
+      const details = ` ${getAscendantSign(ascLongitude())} ${formatAscendantDegree(
+        ascLongitude()
+      )}`;
+      maxW = Math.max(maxW, labelWidth('ASC', details));
+    }
+    const sz = size();
+    const pad = sz * 0.015;
+    const left = centerX() - sz * 0.5 + pad;
+    const right = centerX() + sz * 0.5 - pad;
+    return Math.min(Math.max(centroid.x - maxW / 2, left), right - maxW);
+  };
+
   return (
     <svg
       width={props.width || 600}
@@ -218,7 +309,21 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
       <Show when={props.showHouseLabels ?? true}>
         <For each={houseNumberPositions()}>
           {({ x, y, label }) => (
-            <text x={x} y={y} text-anchor="middle" class="house-label">
+            <text
+              x={x}
+              y={y}
+              text-anchor="middle"
+              class="house-label"
+              style={
+                props.onSelectLagna ? { cursor: 'context-menu' } : undefined
+              }
+              onContextMenu={(e) => {
+                if (!props.onSelectLagna) return;
+                e.preventDefault();
+                // Rotate so this sign (Aries=1 … Pisces=12) is the 1st house.
+                props.onSelectLagna((parseInt(label, 10) - 1) * 30);
+              }}
+            >
               {label}
             </text>
           )}
@@ -237,10 +342,9 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
               <g>
                 <For each={house.planets}>
                   {(planetName, planetIndex) => {
-                    // Get retrograde info
-                    const { retrogradeInfo } = normalizePlanetaryPositions(
-                      props.planets
-                    );
+                    // Get retrograde info + absolute longitudes
+                    const { positions, retrogradeInfo } =
+                      normalizePlanetaryPositions(props.planets);
                     const isRetrograde = retrogradeInfo[planetName];
 
                     // Build CSS classes
@@ -252,16 +356,20 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
                       .filter(Boolean)
                       .join(' ');
 
-                    const planetX = centroid!.x;
-                    const isFirstHouse = house.number === 1;
+                    // The house that holds the ASC marker reserves its top slot
+                    // for ASC, so its planets shift down one.
+                    const isAscHouse = house.number === ascHouseNumber();
+                    // Every label in the house shares one left start (centred on
+                    // the widest label, clamped to the borders).
+                    const planetX = labelStartX(house);
                     const totalItems =
-                      house.planets.length + (isFirstHouse ? 1 : 0);
+                      house.planets.length + (isAscHouse ? 1 : 0);
                     const itemSpacing = 18;
                     const totalHeight = (totalItems - 1) * itemSpacing;
                     const startY = centroid!.y - totalHeight / 2;
 
                     const planetY = () => {
-                      const adjustedIndex = isFirstHouse
+                      const adjustedIndex = isAscHouse
                         ? planetIndex() + 1
                         : planetIndex();
                       return startY + adjustedIndex * itemSpacing;
@@ -271,7 +379,19 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
                       <text
                         x={planetX}
                         y={planetY()}
-                        text-anchor="middle"
+                        text-anchor="start"
+                        style={
+                          props.onSelectLagna
+                            ? { cursor: 'context-menu' }
+                            : undefined
+                        }
+                        onContextMenu={(e) => {
+                          const lon = positions[planetName as PlanetName];
+                          if (!props.onSelectLagna || lon === undefined) return;
+                          e.preventDefault();
+                          // Rotate the chart to view it from this planet.
+                          props.onSelectLagna(lon);
+                        }}
                         class={planetClasses} // Apply the dynamic classes
                       >
                         <tspan class="planet-symbol">
@@ -284,7 +404,10 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
                         </tspan>
                         <tspan class="planet-details">
                           {' '}
-                          {house.sign.substring(0, 3)}{' '}
+                          {planetSign(planetName as PlanetName).substring(
+                            0,
+                            3
+                          )}{' '}
                           {getPlanetDegree(
                             planetName as PlanetName,
                             props.planets,
@@ -302,37 +425,43 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
         }}
       </For>
 
-      {/* Ascendant marker */}
+      {/* Ascendant marker — drawn in the house the natal ascendant actually
+          falls in (house 1 when the chart isn't rotated). */}
       <Show
         when={(() => {
-          const firstHouse = houses().find((h) => h.number === 1);
-          const firstHouseCentroid = planetCentroids().find((c) => c.num === 1);
-          return firstHouse && firstHouseCentroid;
+          const ascHouse = houses().find((h) => h.number === ascHouseNumber());
+          const ascCentroid = planetCentroids().find(
+            (c) => c.num === ascHouseNumber()
+          );
+          return ascHouse && ascCentroid;
         })()}
       >
         {(() => {
-          const firstHouse = houses().find((h) => h.number === 1)!;
-          const firstHouseCentroid = planetCentroids().find(
-            (c) => c.num === 1
+          const ascHouse = houses().find((h) => h.number === ascHouseNumber())!;
+          const ascCentroid = planetCentroids().find(
+            (c) => c.num === ascHouseNumber()
           )!;
-          const totalItems = firstHouse.planets.length + 1;
+          // ASC takes the top slot; any planets in this house sit below it, so
+          // count them for centring (matches the planet loop's isAscHouse).
+          const totalItems = ascHouse.planets.length + 1;
           const itemSpacing = 18;
           const totalHeight = (totalItems - 1) * itemSpacing;
-          const startY = firstHouseCentroid.y - totalHeight / 2;
-          const ascendantY = startY;
+          const ascendantY = ascCentroid.y - totalHeight / 2;
+          // Share the house's common left start so ASC lines up with any planets.
+          const ascendantX = labelStartX(ascHouse);
 
           return (
             <text
-              x={firstHouseCentroid.x}
+              x={ascendantX}
               y={ascendantY}
-              text-anchor="middle"
+              text-anchor="start"
               class="ascendant-text"
             >
               <tspan>ASC</tspan>
               <tspan class="planet-details">
                 {' '}
-                {getAscendantSign(props.ascendant)}{' '}
-                {formatAscendantDegree(props.ascendant)}
+                {getAscendantSign(ascLongitude())}{' '}
+                {formatAscendantDegree(ascLongitude())}
               </tspan>
             </text>
           );

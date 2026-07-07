@@ -13,6 +13,10 @@ const VedicChart: Component<VedicChartProps> = (props) => {
     showHouseLabels: props.showHouseLabels ?? true,
     planetDisplayMode: props.planetDisplayMode || 'symbols',
     allowKetuOverride: props.allowKetuOverride || false,
+    showRetrograde: props.showRetrograde ?? true,
+    onSelectLagna: props.onSelectLagna,
+    lagnaMarker: props.lagnaMarker,
+    bhavaChalit: props.bhavaChalit,
   });
 
   return (

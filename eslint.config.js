@@ -27,6 +27,8 @@ export default [
         Element: 'readonly',
         Event: 'readonly',
         SubmitEvent: 'readonly',
+        CanvasRenderingContext2D: 'readonly',
+        HTMLCanvasElement: 'readonly',
       },
     },
     plugins: {

@@ -32,7 +32,8 @@ export const normalizePlanetaryPositions = (
 export function calculateHouses(
   planets: PlanetaryPositions | PlanetaryPositionsWithRetrograde,
   ascendant: number,
-  allowKetuOverride: boolean = false
+  allowKetuOverride: boolean = false,
+  bhavaChalit: boolean = false
 ): HouseInfo[] {
   // Normalize planetary positions first
   const { positions: normalizedPlanets } = normalizePlanetaryPositions(planets);
@@ -64,12 +65,21 @@ export function calculateHouses(
       planetDegree = normalizeDegree(normalizedPlanets.Rahu + 180);
     }
 
-    const planetSignStart = Math.floor(planetDegree / 30) * 30;
-    const ascendantSignIndex = Math.floor(ascendantSignStart / 30);
-    const planetSignIndex = Math.floor(planetSignStart / 30);
-
-    // Calculate house number based on sign difference
-    const houseNumber = ((planetSignIndex - ascendantSignIndex + 12) % 12) + 1;
+    let houseNumber: number;
+    if (bhavaChalit) {
+      // Bhava Chalit (equal, longitude-only): the ascendant sits at the middle
+      // of the 1st bhava, so cusps fall at lagna ± 15°, ± 45°, … A planet's
+      // bhava is the 30° segment centred on each house cusp. Works for any
+      // chart (D1 or a divisional) since it needs only the ascendant longitude.
+      const offset = normalizeDegree(planetDegree - ascendant);
+      houseNumber = (Math.floor((offset + 15) / 30) % 12) + 1;
+    } else {
+      // Whole-sign: the planet's house is its sign counted from the lagna sign.
+      const planetSignStart = Math.floor(planetDegree / 30) * 30;
+      const ascendantSignIndex = Math.floor(ascendantSignStart / 30);
+      const planetSignIndex = Math.floor(planetSignStart / 30);
+      houseNumber = ((planetSignIndex - ascendantSignIndex + 12) % 12) + 1;
+    }
 
     const house = houses.find((h) => h.number === houseNumber);
     if (house) {
@@ -135,7 +145,7 @@ export const getPlanetDisplay = (
   const isRetrograde = retrogradeInfo[planetName];
 
   if (isRetrograde) {
-    return `${baseDisplay} Rx`;
+    return baseDisplay;
   }
 
   return baseDisplay;
@@ -145,7 +155,7 @@ export function formatDegree(degree: number): string {
   const degreeWithinSign = degree % 30;
   const wholeDegrees = Math.floor(degreeWithinSign);
   // Round to nearest minute to avoid floating-point precision issues
-  const minutes = Math.round((degreeWithinSign - wholeDegrees) * 60);
+  const minutes = Math.floor((degreeWithinSign - wholeDegrees) * 60);
 
   // Handle the case where rounding gives us 60 minutes
   if (minutes >= 60) {

@@ -21,20 +21,20 @@
 
 /* Planet text styling */
 .vedic-chart .planet-text {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: bold;
   user-select: none;
 }
 
 .vedic-chart .planet-details {
-  font-size: 12px;
+  font-size: 10px;
   font-weight: normal;
   fill: #666666;
 }
 
 /* Ascendant marker */
 .vedic-chart .ascendant-text {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: bold;
   fill: #000000;
   user-select: none;
