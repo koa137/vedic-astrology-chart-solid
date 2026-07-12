@@ -328,7 +328,11 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
                 if (!props.onSelectLagna) return;
                 e.preventDefault();
                 // Rotate so this sign (Aries=1 … Pisces=12) is the 1st house.
-                props.onSelectLagna((parseInt(label, 10) - 1) * 30);
+                // Keep the ascendant's degree-within-sign so a Bhava Chalit
+                // chart's cusps (lagna ± 15°) stay intact rather than snapping
+                // to sign boundaries; harmless in whole-sign framing.
+                const degInSign = ((ascLongitude() % 30) + 30) % 30;
+                props.onSelectLagna((parseInt(label, 10) - 1) * 30 + degInSign);
               }}
             >
               {label}
