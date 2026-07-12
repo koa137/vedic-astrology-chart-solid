@@ -80,7 +80,8 @@ export function calculateHouses(
       // from the viewing lagna's own bhava.
       const bhavaIndex = (x: number) =>
         Math.floor(normalizeDegree(x - cuspAscendant + 15) / 30);
-      houseNumber = ((bhavaIndex(planetDegree) - bhavaIndex(ascendant) + 12) % 12) + 1;
+      houseNumber =
+        ((bhavaIndex(planetDegree) - bhavaIndex(ascendant) + 12) % 12) + 1;
     } else {
       // Whole-sign: the planet's house is its sign counted from the lagna sign.
       const planetSignStart = Math.floor(planetDegree / 30) * 30;
