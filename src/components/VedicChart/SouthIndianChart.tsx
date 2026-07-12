@@ -63,7 +63,9 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
   const markerHouse = (lon: number) =>
     ((signOfLon(lon) - ascendantSignNumber() + 1 + 12) % 12) + 1;
   const markersInHouse = (houseNum: number) =>
-    (props.customMarkers ?? []).filter((m) => markerHouse(m.position) === houseNum);
+    (props.customMarkers ?? []).filter(
+      (m) => markerHouse(m.position) === houseNum
+    );
 
   return (
     <svg

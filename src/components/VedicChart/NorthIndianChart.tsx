@@ -195,7 +195,9 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
   const markerHouse = (lon: number) =>
     ((signOfLon(lon) - signOfLon(props.ascendant) + 12) % 12) + 1;
   const markersInHouse = (houseNum: number) =>
-    (props.customMarkers ?? []).filter((m) => markerHouse(m.position) === houseNum);
+    (props.customMarkers ?? []).filter(
+      (m) => markerHouse(m.position) === houseNum
+    );
   // Which house the ASC marker falls in given the current (possibly rotated)
   // house framing. 1 when not rotated.
   const ascHouseNumber = () =>
@@ -356,12 +358,16 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
           const markerX = () => centroid?.x ?? centerX();
           const markerRowY = () => {
             const hasContent = house.planets.length > 0 || isAscHouse;
-            return hasContent ? startY() - itemSpacing : centroid?.y ?? centerY();
+            return hasContent
+              ? startY() - itemSpacing
+              : (centroid?.y ?? centerY());
           };
 
           return (
             <Show
-              when={centroid && (house.planets.length > 0 || markers.length > 0)}
+              when={
+                centroid && (house.planets.length > 0 || markers.length > 0)
+              }
             >
               <g>
                 <For each={house.planets}>
