@@ -10,6 +10,7 @@ export type {
   VedicChartData,
   VedicChartProps,
   HouseInfo,
+  CustomMarker,
 } from './types';
 
 export type { PlanetaryPositions, PlanetName, PlanetInfo } from './types';
@@ -75,4 +76,11 @@ export const defaultStyles = `
 .vedic-chart .planet-saturn { fill: #4B0082; }
 .vedic-chart .planet-rahu { fill: #800080; }
 .vedic-chart .planet-ketu { fill: #8B4513; }
+
+.vedic-chart .custom-marker-text {
+  font-size: 12px;
+  font-weight: bold;
+  fill: #555555;
+  user-select: none;
+}
 `;

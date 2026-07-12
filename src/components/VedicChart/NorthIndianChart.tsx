@@ -191,6 +191,11 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
   const ascLongitude = () => props.lagnaMarker ?? props.ascendant;
   const signOfLon = (lon: number) =>
     Math.floor((((lon % 360) + 360) % 360) / 30);
+  // Custom markers ("words") placed by whole sign, grouped by house.
+  const markerHouse = (lon: number) =>
+    ((signOfLon(lon) - signOfLon(props.ascendant) + 12) % 12) + 1;
+  const markersInHouse = (houseNum: number) =>
+    (props.customMarkers ?? []).filter((m) => markerHouse(m.position) === houseNum);
   // Which house the ASC marker falls in given the current (possibly rotated)
   // house framing. 1 when not rotated.
   const ascHouseNumber = () =>
@@ -336,9 +341,22 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
           const centroid = planetCentroids().find(
             (c) => c.num === house.number
           );
+          // The house that holds the ASC marker reserves its top slot for ASC,
+          // so its planets/markers shift down one.
+          const isAscHouse = house.number === ascHouseNumber();
+          const markers = markersInHouse(house.number);
+          const itemSpacing = 18;
+          // Planets, then ASC (top), then custom markers all stack in the house.
+          const totalItems =
+            house.planets.length + (isAscHouse ? 1 : 0) + markers.length;
+          const startY = () =>
+            (centroid?.y ?? 0) - ((totalItems - 1) * itemSpacing) / 2;
+          const markerBase = (isAscHouse ? 1 : 0) + house.planets.length;
 
           return (
-            <Show when={centroid && house.planets.length > 0}>
+            <Show
+              when={centroid && (house.planets.length > 0 || markers.length > 0)}
+            >
               <g>
                 <For each={house.planets}>
                   {(planetName, planetIndex) => {
@@ -356,23 +374,15 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
                       .filter(Boolean)
                       .join(' ');
 
-                    // The house that holds the ASC marker reserves its top slot
-                    // for ASC, so its planets shift down one.
-                    const isAscHouse = house.number === ascHouseNumber();
                     // Every label in the house shares one left start (centred on
                     // the widest label, clamped to the borders).
                     const planetX = labelStartX(house);
-                    const totalItems =
-                      house.planets.length + (isAscHouse ? 1 : 0);
-                    const itemSpacing = 18;
-                    const totalHeight = (totalItems - 1) * itemSpacing;
-                    const startY = centroid!.y - totalHeight / 2;
 
                     const planetY = () => {
                       const adjustedIndex = isAscHouse
                         ? planetIndex() + 1
                         : planetIndex();
-                      return startY + adjustedIndex * itemSpacing;
+                      return startY() + adjustedIndex * itemSpacing;
                     };
 
                     return (
@@ -419,6 +429,23 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
                     );
                   }}
                 </For>
+
+                {/* Custom markers (arudhas, special lagnas, …) */}
+                <For each={markers}>
+                  {(m, mi) => (
+                    <text
+                      x={labelStartX(house)}
+                      y={startY() + (markerBase + mi()) * itemSpacing}
+                      text-anchor="start"
+                      class={`custom-marker-text ${m.className ?? ''}`.trim()}
+                    >
+                      <tspan>{m.label}</tspan>
+                      <Show when={m.details}>
+                        <tspan class="planet-details"> {m.details}</tspan>
+                      </Show>
+                    </text>
+                  )}
+                </For>
               </g>
             </Show>
           );
@@ -441,9 +468,10 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
           const ascCentroid = planetCentroids().find(
             (c) => c.num === ascHouseNumber()
           )!;
-          // ASC takes the top slot; any planets in this house sit below it, so
-          // count them for centring (matches the planet loop's isAscHouse).
-          const totalItems = ascHouse.planets.length + 1;
+          // ASC takes the top slot; any planets and custom markers in this house
+          // sit below it, so count them for centring (matches the planet loop).
+          const totalItems =
+            ascHouse.planets.length + 1 + markersInHouse(ascHouseNumber()).length;
           const itemSpacing = 18;
           const totalHeight = (totalItems - 1) * itemSpacing;
           const ascendantY = ascCentroid.y - totalHeight / 2;

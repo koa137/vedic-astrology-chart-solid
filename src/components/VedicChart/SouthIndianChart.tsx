@@ -57,6 +57,14 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
     y: row * cellHeight() + cellHeight() / 2,
   });
 
+  // Custom markers ("words") placed by whole sign, grouped by house.
+  const signOfLon = (lon: number) =>
+    Math.floor((((lon % 360) + 360) % 360) / 30);
+  const markerHouse = (lon: number) =>
+    ((signOfLon(lon) - ascendantSignNumber() + 1 + 12) % 12) + 1;
+  const markersInHouse = (houseNum: number) =>
+    (props.customMarkers ?? []).filter((m) => markerHouse(m.position) === houseNum);
+
   return (
     <svg
       width={props.width || 600}
@@ -97,8 +105,12 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
           const center = getCellCenter(pos.row, pos.col);
 
           const isFirstHouse = house.number === 1;
-          const totalItems = house.planets.length + (isFirstHouse ? 1 : 0);
+          const markers = markersInHouse(house.number);
+          const totalItems =
+            house.planets.length + (isFirstHouse ? 1 : 0) + markers.length;
           const itemSpacing = 18;
+          const startY = center.y - ((totalItems - 1) * itemSpacing) / 2;
+          const markerBase = (isFirstHouse ? 1 : 0) + house.planets.length;
 
           return (
             <g>
@@ -131,8 +143,6 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
                     .join(' ');
 
                   const planetX = center.x;
-                  const totalHeight = (totalItems - 1) * itemSpacing;
-                  const startY = center.y - totalHeight / 2;
 
                   // Create a reactive computation for the Y position
                   const planetY = () => {
@@ -171,6 +181,23 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
                   );
                 }}
               </For>
+
+              {/* Custom markers (arudhas, special lagnas, …) */}
+              <For each={markers}>
+                {(m, mi) => (
+                  <text
+                    x={center.x}
+                    y={startY + (markerBase + mi()) * itemSpacing}
+                    text-anchor="middle"
+                    class={`custom-marker-text ${m.className ?? ''}`.trim()}
+                  >
+                    <tspan>{m.label}</tspan>
+                    <Show when={m.details}>
+                      <tspan class="planet-details"> {m.details}</tspan>
+                    </Show>
+                  </text>
+                )}
+              </For>
             </g>
           );
         }}
@@ -191,7 +218,8 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
             firstHousePos.col
           );
 
-          const totalItems = firstHouse.planets.length + 1;
+          const totalItems =
+            firstHouse.planets.length + 1 + markersInHouse(1).length;
           const itemSpacing = 18;
           const totalHeight = (totalItems - 1) * itemSpacing;
           const startY = firstHouseCenter.y - totalHeight / 2;

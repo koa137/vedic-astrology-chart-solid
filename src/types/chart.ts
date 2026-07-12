@@ -6,6 +6,19 @@ import {
 export type ChartStyle = 'north' | 'south';
 export type PlanetDisplayMode = 'symbols' | 'names';
 
+/** An arbitrary labelled point ("word") drawn on the wheel at a longitude,
+ *  alongside the planets — e.g. arudha padas (A1…A12) or special lagnas. */
+export interface CustomMarker {
+  /** The text drawn (e.g. "A1", "UL", "AL"). */
+  label: string;
+  /** Ecliptic longitude 0–360; the marker is placed in this sign's house. */
+  position: number;
+  /** Optional secondary text after the label (e.g. a sign/degree). */
+  details?: string;
+  /** Optional extra CSS class for styling this marker. */
+  className?: string;
+}
+
 export interface VedicChartData {
   planets: PlanetaryPositions | PlanetaryPositionsWithRetrograde;
   ascendant: number; // degrees 0-360
@@ -31,6 +44,9 @@ export interface VedicChartProps extends VedicChartData {
   /** Draw the Bhava Chalit chart: place planets by equal house cusps (ascendant
    *  at the middle of the 1st bhava) instead of by whole sign. */
   bhavaChalit?: boolean;
+  /** Extra labelled points to draw on the wheel (by whole sign), stacked under
+   *  the planets in each house — e.g. arudha padas or special lagnas. */
+  customMarkers?: CustomMarker[];
 }
 
 export interface HouseInfo {
