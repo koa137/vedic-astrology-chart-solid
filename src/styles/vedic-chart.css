@@ -32,6 +32,14 @@
   fill: #666666;
 }
 
+/* Custom markers (arudhas, special lagnas, …) — small and unobtrusive */
+.vedic-chart .custom-marker-text {
+  font-size: 9px;
+  font-weight: normal;
+  fill: #888888;
+  user-select: none;
+}
+
 /* Ascendant marker */
 .vedic-chart .ascendant-text {
   font-size: 12px;

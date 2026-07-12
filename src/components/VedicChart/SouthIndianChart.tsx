@@ -106,11 +106,15 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
 
           const isFirstHouse = house.number === 1;
           const markers = markersInHouse(house.number);
-          const totalItems =
-            house.planets.length + (isFirstHouse ? 1 : 0) + markers.length;
+          // Custom markers sit in a row above the planets (or at the cell centre
+          // when empty) and don't disturb the planet stack.
+          const totalItems = house.planets.length + (isFirstHouse ? 1 : 0);
           const itemSpacing = 18;
           const startY = center.y - ((totalItems - 1) * itemSpacing) / 2;
-          const markerBase = (isFirstHouse ? 1 : 0) + house.planets.length;
+          const markerY =
+            house.planets.length > 0 || isFirstHouse
+              ? startY - itemSpacing
+              : center.y;
 
           return (
             <g>
@@ -182,12 +186,13 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
                 }}
               </For>
 
-              {/* Custom markers (arudhas, special lagnas, …) */}
+              {/* Custom markers along the cell's bottom edge — a horizontal row
+                  so several padas sit side by side, without disturbing planets. */}
               <For each={markers}>
                 {(m, mi) => (
                   <text
-                    x={center.x}
-                    y={startY + (markerBase + mi()) * itemSpacing}
+                    x={center.x + (mi() - (markers.length - 1) / 2) * 24}
+                    y={markerY}
                     text-anchor="middle"
                     class={`custom-marker-text ${m.className ?? ''}`.trim()}
                   >
@@ -218,8 +223,7 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
             firstHousePos.col
           );
 
-          const totalItems =
-            firstHouse.planets.length + 1 + markersInHouse(1).length;
+          const totalItems = firstHouse.planets.length + 1;
           const itemSpacing = 18;
           const totalHeight = (totalItems - 1) * itemSpacing;
           const startY = firstHouseCenter.y - totalHeight / 2;

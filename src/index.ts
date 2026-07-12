@@ -78,9 +78,9 @@ export const defaultStyles = `
 .vedic-chart .planet-ketu { fill: #8B4513; }
 
 .vedic-chart .custom-marker-text {
-  font-size: 12px;
-  font-weight: bold;
-  fill: #555555;
+  font-size: 9px;
+  font-weight: normal;
+  fill: #888888;
   user-select: none;
 }
 `;

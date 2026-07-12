@@ -342,16 +342,22 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
             (c) => c.num === house.number
           );
           // The house that holds the ASC marker reserves its top slot for ASC,
-          // so its planets/markers shift down one.
+          // so its planets shift down one.
           const isAscHouse = house.number === ascHouseNumber();
           const markers = markersInHouse(house.number);
           const itemSpacing = 18;
-          // Planets, then ASC (top), then custom markers all stack in the house.
-          const totalItems =
-            house.planets.length + (isAscHouse ? 1 : 0) + markers.length;
+          // Custom markers sit at the house periphery and don't disturb the
+          // planet stack (planets + ASC only).
+          const totalItems = house.planets.length + (isAscHouse ? 1 : 0);
           const startY = () =>
             (centroid?.y ?? 0) - ((totalItems - 1) * itemSpacing) / 2;
-          const markerBase = (isAscHouse ? 1 : 0) + house.planets.length;
+          // Custom markers: centred on the house, in a row just above the planet
+          // stack (or at the house centre when the house holds no planets).
+          const markerX = () => centroid?.x ?? centerX();
+          const markerRowY = () => {
+            const hasContent = house.planets.length > 0 || isAscHouse;
+            return hasContent ? startY() - itemSpacing : centroid?.y ?? centerY();
+          };
 
           return (
             <Show
@@ -430,13 +436,14 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
                   }}
                 </For>
 
-                {/* Custom markers (arudhas, special lagnas, …) */}
+                {/* Custom markers, centred above the planets — a horizontal row
+                    so several padas in one house sit side by side. */}
                 <For each={markers}>
                   {(m, mi) => (
                     <text
-                      x={labelStartX(house)}
-                      y={startY() + (markerBase + mi()) * itemSpacing}
-                      text-anchor="start"
+                      x={markerX() + (mi() - (markers.length - 1) / 2) * 24}
+                      y={markerRowY()}
+                      text-anchor="middle"
                       class={`custom-marker-text ${m.className ?? ''}`.trim()}
                     >
                       <tspan>{m.label}</tspan>
@@ -468,10 +475,9 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
           const ascCentroid = planetCentroids().find(
             (c) => c.num === ascHouseNumber()
           )!;
-          // ASC takes the top slot; any planets and custom markers in this house
-          // sit below it, so count them for centring (matches the planet loop).
-          const totalItems =
-            ascHouse.planets.length + 1 + markersInHouse(ascHouseNumber()).length;
+          // ASC takes the top slot; any planets in this house sit below it, so
+          // count them for centring (matches the planet loop).
+          const totalItems = ascHouse.planets.length + 1;
           const itemSpacing = 18;
           const totalHeight = (totalItems - 1) * itemSpacing;
           const ascendantY = ascCentroid.y - totalHeight / 2;
