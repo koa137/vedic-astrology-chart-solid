@@ -40,7 +40,10 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
       props.planets,
       props.ascendant,
       props.allowKetuOverride || false,
-      props.bhavaChalit || false
+      props.bhavaChalit || false,
+      // Fix Bhava Chalit cusps to the natal ascendant so rotating the lagna
+      // renumbers houses without moving planets between physical bhavas.
+      props.lagnaMarker ?? props.ascendant
     );
 
   // A planet's own sidereal longitude (respecting the Ketu override) and its

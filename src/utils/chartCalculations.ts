@@ -33,7 +33,12 @@ export function calculateHouses(
   planets: PlanetaryPositions | PlanetaryPositionsWithRetrograde,
   ascendant: number,
   allowKetuOverride: boolean = false,
-  bhavaChalit: boolean = false
+  bhavaChalit: boolean = false,
+  // The ascendant that fixes the Bhava Chalit cusps. Defaults to `ascendant`,
+  // but when the chart is rotated to view from another lagna the caller passes
+  // the natal ascendant here so the physical bhava cusps don't move — only the
+  // house numbering rotates.
+  cuspAscendant: number = ascendant
 ): HouseInfo[] {
   // Normalize planetary positions first
   const { positions: normalizedPlanets } = normalizePlanetaryPositions(planets);
@@ -69,10 +74,13 @@ export function calculateHouses(
     if (bhavaChalit) {
       // Bhava Chalit (equal, longitude-only): the ascendant sits at the middle
       // of the 1st bhava, so cusps fall at lagna ± 15°, ± 45°, … A planet's
-      // bhava is the 30° segment centred on each house cusp. Works for any
-      // chart (D1 or a divisional) since it needs only the ascendant longitude.
-      const offset = normalizeDegree(planetDegree - ascendant);
-      houseNumber = (Math.floor((offset + 15) / 30) % 12) + 1;
+      // bhava is the 30° segment centred on each cusp. The cusps are fixed by
+      // `cuspAscendant` (the natal ascendant), so rotating the viewing lagna
+      // leaves each planet in its physical bhava and only renumbers the houses
+      // from the viewing lagna's own bhava.
+      const bhavaIndex = (x: number) =>
+        Math.floor(normalizeDegree(x - cuspAscendant + 15) / 30);
+      houseNumber = ((bhavaIndex(planetDegree) - bhavaIndex(ascendant) + 12) % 12) + 1;
     } else {
       // Whole-sign: the planet's house is its sign counted from the lagna sign.
       const planetSignStart = Math.floor(planetDegree / 30) * 30;
