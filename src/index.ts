@@ -49,20 +49,20 @@ export const defaultStyles = `
 }
 
 .vedic-chart .house-label {
-  font-size: 12px;
+  font-size: calc(12px * var(--vedic-font-scale, 1));
   fill: #666666;
   font-weight: bold;
   user-select: none;
 }
 
 .vedic-chart .planet-text {
-  font-size: 14px;
+  font-size: calc(14px * var(--vedic-font-scale, 1));
   font-weight: bold;
   user-select: none;
 }
 
 .vedic-chart .planet-details {
-  font-size: 12px;
+  font-size: calc(12px * var(--vedic-font-scale, 1));
   font-weight: normal;
   fill: #666666;
 }
@@ -78,7 +78,7 @@ export const defaultStyles = `
 .vedic-chart .planet-ketu { fill: #8B4513; }
 
 .vedic-chart .custom-marker-text {
-  font-size: 9px;
+  font-size: calc(9px * var(--vedic-font-scale, 1));
   font-weight: normal;
   fill: #888888;
   user-select: none;

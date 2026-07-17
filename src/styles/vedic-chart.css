@@ -13,7 +13,7 @@
 
 /* House labels */
 .vedic-chart .house-label {
-  font-size: 12px;
+  font-size: calc(12px * var(--vedic-font-scale, 1));
   fill: #666666;
   font-weight: bold;
   user-select: none;
@@ -21,20 +21,20 @@
 
 /* Planet text styling */
 .vedic-chart .planet-text {
-  font-size: 12px;
+  font-size: calc(12px * var(--vedic-font-scale, 1));
   font-weight: bold;
   user-select: none;
 }
 
 .vedic-chart .planet-details {
-  font-size: 10px;
+  font-size: calc(10px * var(--vedic-font-scale, 1));
   font-weight: normal;
   fill: #666666;
 }
 
 /* Custom markers (arudhas, special lagnas, …) — small and unobtrusive */
 .vedic-chart .custom-marker-text {
-  font-size: 9px;
+  font-size: calc(9px * var(--vedic-font-scale, 1));
   font-weight: normal;
   fill: #888888;
   user-select: none;
@@ -42,7 +42,7 @@
 
 /* Ascendant marker */
 .vedic-chart .ascendant-text {
-  font-size: 12px;
+  font-size: calc(12px * var(--vedic-font-scale, 1));
   font-weight: bold;
   fill: #000000;
   user-select: none;
@@ -113,15 +113,15 @@
 /* Responsive design */
 @media (max-width: 768px) {
   .vedic-chart .planet-text {
-    font-size: 12px;
+    font-size: calc(12px * var(--vedic-font-scale, 1));
   }
 
   .vedic-chart .planet-details {
-    font-size: 10px;
+    font-size: calc(10px * var(--vedic-font-scale, 1));
   }
 
   .vedic-chart .house-label {
-    font-size: 10px;
+    font-size: calc(10px * var(--vedic-font-scale, 1));
   }
 }
 
