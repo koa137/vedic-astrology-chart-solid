@@ -114,7 +114,8 @@ export function getPlanetSymbol(planetName: string): string {
     Neptune: '♆',
     Pluto: '♇',
   };
-  return symbols[planetName] || planetName.substring(0, 1);
+  // Any other body (a special lagna, an upagraha) shows the name it was given.
+  return symbols[planetName] || planetName;
 }
 
 export function getPlanetName(planetName: string): string {
@@ -132,7 +133,8 @@ export function getPlanetName(planetName: string): string {
     Neptune: 'Ne',
     Pluto: 'Pl',
   };
-  return names[planetName] || planetName.substring(0, 1);
+  // Any other body (a special lagna, an upagraha) shows the name it was given.
+  return names[planetName] || planetName;
 }
 
 export const getPlanetDisplay = (

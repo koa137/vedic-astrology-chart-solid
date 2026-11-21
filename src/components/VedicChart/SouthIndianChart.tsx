@@ -101,23 +101,30 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
       </g>
 
       {/* House content */}
-      <For each={houses()}>
-        {(house) => {
+      {/* Houses always arrive in order 1–12, so a row's index is its house:
+          update each in place rather than rebuilding all twelve on a re-cast. */}
+      <For each={houses()} keyed={false}>
+        {(house, i) => {
+          // With keyed={false} the index is a plain number (Solid 2), not the
+          // accessor this Solid 1-era lint rule expects.
+          // eslint-disable-next-line solid/reactivity
+          const num = i + 1;
           // The callback body isn't a tracking scope: what reads reactive
           // state (the cell size, the markers) is an accessor.
-          const pos = getHousePosition(house.number);
+          const pos = getHousePosition(num);
           const center = () => getCellCenter(pos.row, pos.col);
 
-          const isFirstHouse = house.number === 1;
-          const markers = () => markersInHouse(house.number);
+          const isFirstHouse = num === 1;
+          const markers = () => markersInHouse(num);
           // Custom markers sit in a row above the planets (or at the cell centre
           // when empty) and don't disturb the planet stack.
-          const totalItems = house.planets.length + (isFirstHouse ? 1 : 0);
+          const totalItems = () =>
+            house().planets.length + (isFirstHouse ? 1 : 0);
           const itemSpacing = 18;
           const startY = () =>
-            center().y - ((totalItems - 1) * itemSpacing) / 2;
+            center().y - ((totalItems() - 1) * itemSpacing) / 2;
           const markerY = () =>
-            house.planets.length > 0 || isFirstHouse
+            house().planets.length > 0 || isFirstHouse
               ? startY() - itemSpacing
               : center().y;
 
@@ -130,11 +137,11 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
                   text-anchor="middle"
                   class="house-label"
                 >
-                  {getHouseSignNumber(house.number)}
+                  {getHouseSignNumber(num)}
                 </text>
               </Show>
 
-              <For each={house.planets}>
+              <For each={house().planets}>
                 {(planetName, planetIndex) => {
                   // Retrograde info, read reactively.
                   const isRetrograde = () =>
@@ -170,7 +177,7 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
                       </tspan>
                       <tspan class="planet-details">
                         {' '}
-                        {house.sign.substring(0, 3)}{' '}
+                        {house().sign.substring(0, 3)}{' '}
                         {getPlanetDegree(
                           planetName as PlanetName,
                           props.planets,

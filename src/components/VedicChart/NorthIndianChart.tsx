@@ -28,11 +28,25 @@ function textWidth(text: string, font: string): number {
   measureCtx.font = font;
   return measureCtx.measureText(text).width;
 }
+// The labels' font scale: the `--vedic-font-scale` custom property the
+// stylesheet sizes them by (set on the document root).
+function fontScale(): number {
+  if (typeof document === 'undefined') return 1;
+  const v = parseFloat(
+    window
+      .getComputedStyle(document.documentElement)
+      .getPropertyValue('--vedic-font-scale')
+  );
+  return Number.isFinite(v) && v > 0 ? v : 1;
+}
 // Must match .planet-text / .planet-details in vedic-chart.css.
-const SYMBOL_FONT = 'bold 12px Arial, sans-serif';
-const DETAILS_FONT = '10px Arial, sans-serif';
-const labelWidth = (symbol: string, details: string): number =>
-  textWidth(symbol, SYMBOL_FONT) + textWidth(details, DETAILS_FONT);
+const labelWidth = (symbol: string, details: string): number => {
+  const k = fontScale();
+  return (
+    textWidth(symbol, `bold ${12 * k}px Arial, sans-serif`) +
+    textWidth(details, `${10 * k}px Arial, sans-serif`)
+  );
+};
 
 const NorthIndianChart: Component<ChartProps> = (props) => {
   const houses = () =>
@@ -345,28 +359,33 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
       </Show>
 
       {/* Planets */}
-      <For each={houses()}>
-        {(house) => {
+      {/* Houses always arrive in order 1–12, so a row's index is its house:
+          update each in place rather than rebuilding all twelve on a re-cast. */}
+      <For each={houses()} keyed={false}>
+        {(house, i) => {
+          // With keyed={false} the index is a plain number (Solid 2), not the
+          // accessor this Solid 1-era lint rule expects.
+          // eslint-disable-next-line solid/reactivity
+          const num = i + 1;
           // The callback body isn't a tracking scope: everything that reads
           // reactive state is an accessor, read where it's used.
-          const centroid = () =>
-            planetCentroids().find((c) => c.num === house.number);
+          const centroid = () => planetCentroids().find((c) => c.num === num);
           // The house that holds the ASC marker reserves its top slot for ASC,
           // so its planets shift down one.
-          const isAscHouse = () => house.number === ascHouseNumber();
-          const markers = () => markersInHouse(house.number);
+          const isAscHouse = () => num === ascHouseNumber();
+          const markers = () => markersInHouse(num);
           const itemSpacing = 18;
           // Custom markers sit at the house periphery and don't disturb the
           // planet stack (planets + ASC only).
           const totalItems = () =>
-            house.planets.length + (isAscHouse() ? 1 : 0);
+            house().planets.length + (isAscHouse() ? 1 : 0);
           const startY = () =>
             (centroid()?.y ?? 0) - ((totalItems() - 1) * itemSpacing) / 2;
           // Custom markers: centred on the house, in a row just above the planet
           // stack (or at the house centre when the house holds no planets).
           const markerX = () => centroid()?.x ?? centerX();
           const markerRowY = () => {
-            const hasContent = house.planets.length > 0 || isAscHouse();
+            const hasContent = house().planets.length > 0 || isAscHouse();
             return hasContent
               ? startY() - itemSpacing
               : (centroid()?.y ?? centerY());
@@ -375,11 +394,12 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
           return (
             <Show
               when={
-                centroid() && (house.planets.length > 0 || markers().length > 0)
+                centroid() &&
+                (house().planets.length > 0 || markers().length > 0)
               }
             >
               <g>
-                <For each={house.planets}>
+                <For each={house().planets}>
                   {(planetName, planetIndex) => {
                     // Retrograde info + absolute longitudes, read reactively.
                     const normalized = () =>
@@ -389,7 +409,7 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
 
                     // Every label in the house shares one left start (centred on
                     // the widest label, clamped to the borders).
-                    const planetX = () => labelStartX(house);
+                    const planetX = () => labelStartX(house());
 
                     const planetY = () => {
                       const adjustedIndex = isAscHouse()
