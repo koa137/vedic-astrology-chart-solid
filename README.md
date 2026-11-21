@@ -21,12 +21,15 @@ A beautiful SolidJS component for rendering Vedic (Jyotish) astrology charts. Su
 ## Installation
 
 ```bash
-npm install vedic-astrology-chart-solid
+npm install vedic-astrology-chart-solid solid-js @solidjs/web
 # or
-bun add vedic-astrology-chart-solid
+bun add vedic-astrology-chart-solid solid-js @solidjs/web
 # or
-yarn add vedic-astrology-chart-solid
+yarn add vedic-astrology-chart-solid solid-js @solidjs/web
 ```
+
+Version 2 targets **Solid 2** (`solid-js` and `@solidjs/web` 2.x). For Solid
+1.x, use version 1 (`npm install vedic-astrology-chart-solid@1`).
 
 ### Include Styles (Optional)
 
@@ -558,7 +561,8 @@ bun run type-check
 
 ## Requirements
 
-- **SolidJS**: ^1.8.0
+- **SolidJS**: `solid-js` ^2.0.0 and `@solidjs/web` ^2.0.0 (version 1 of this
+  package supports Solid ^1.8)
 - **TypeScript**: ^5.0.0 (for TypeScript projects)
 - **Modern Browser**: Supports SVG rendering
 

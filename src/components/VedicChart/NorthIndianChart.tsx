@@ -347,58 +347,52 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
       {/* Planets */}
       <For each={houses()}>
         {(house) => {
-          const centroid = planetCentroids().find(
-            (c) => c.num === house.number
-          );
+          // The callback body isn't a tracking scope: everything that reads
+          // reactive state is an accessor, read where it's used.
+          const centroid = () =>
+            planetCentroids().find((c) => c.num === house.number);
           // The house that holds the ASC marker reserves its top slot for ASC,
           // so its planets shift down one.
-          const isAscHouse = house.number === ascHouseNumber();
-          const markers = markersInHouse(house.number);
+          const isAscHouse = () => house.number === ascHouseNumber();
+          const markers = () => markersInHouse(house.number);
           const itemSpacing = 18;
           // Custom markers sit at the house periphery and don't disturb the
           // planet stack (planets + ASC only).
-          const totalItems = house.planets.length + (isAscHouse ? 1 : 0);
+          const totalItems = () =>
+            house.planets.length + (isAscHouse() ? 1 : 0);
           const startY = () =>
-            (centroid?.y ?? 0) - ((totalItems - 1) * itemSpacing) / 2;
+            (centroid()?.y ?? 0) - ((totalItems() - 1) * itemSpacing) / 2;
           // Custom markers: centred on the house, in a row just above the planet
           // stack (or at the house centre when the house holds no planets).
-          const markerX = () => centroid?.x ?? centerX();
+          const markerX = () => centroid()?.x ?? centerX();
           const markerRowY = () => {
-            const hasContent = house.planets.length > 0 || isAscHouse;
+            const hasContent = house.planets.length > 0 || isAscHouse();
             return hasContent
               ? startY() - itemSpacing
-              : (centroid?.y ?? centerY());
+              : (centroid()?.y ?? centerY());
           };
 
           return (
             <Show
               when={
-                centroid && (house.planets.length > 0 || markers.length > 0)
+                centroid() && (house.planets.length > 0 || markers().length > 0)
               }
             >
               <g>
                 <For each={house.planets}>
                   {(planetName, planetIndex) => {
-                    // Get retrograde info + absolute longitudes
-                    const { positions, retrogradeInfo } =
+                    // Retrograde info + absolute longitudes, read reactively.
+                    const normalized = () =>
                       normalizePlanetaryPositions(props.planets);
-                    const isRetrograde = retrogradeInfo[planetName];
-
-                    // Build CSS classes
-                    const planetClasses = [
-                      'planet-text',
-                      `planet-${planetName.toLowerCase()}`,
-                      isRetrograde ? 'retrograde' : '',
-                    ]
-                      .filter(Boolean)
-                      .join(' ');
+                    const isRetrograde = () =>
+                      !!normalized().retrogradeInfo[planetName];
 
                     // Every label in the house shares one left start (centred on
                     // the widest label, clamped to the borders).
-                    const planetX = labelStartX(house);
+                    const planetX = () => labelStartX(house);
 
                     const planetY = () => {
-                      const adjustedIndex = isAscHouse
+                      const adjustedIndex = isAscHouse()
                         ? planetIndex() + 1
                         : planetIndex();
                       return startY() + adjustedIndex * itemSpacing;
@@ -406,7 +400,7 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
 
                     return (
                       <text
-                        x={planetX}
+                        x={planetX()}
                         y={planetY()}
                         text-anchor="start"
                         style={
@@ -415,13 +409,18 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
                             : undefined
                         }
                         onContextMenu={(e) => {
-                          const lon = positions[planetName as PlanetName];
+                          const lon =
+                            normalized().positions[planetName as PlanetName];
                           if (!props.onSelectLagna || lon === undefined) return;
                           e.preventDefault();
                           // Rotate the chart to view it from this planet.
                           props.onSelectLagna(lon);
                         }}
-                        class={planetClasses} // Apply the dynamic classes
+                        class={[
+                          'planet-text',
+                          `planet-${planetName.toLowerCase()}`,
+                          { retrograde: isRetrograde() },
+                        ]}
                       >
                         <tspan class="planet-symbol">
                           {getPlanetDisplay(
@@ -451,13 +450,13 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
 
                 {/* Custom markers, centred above the planets — a horizontal row
                     so several padas in one house sit side by side. */}
-                <For each={markers}>
+                <For each={markers()}>
                   {(m, mi) => (
                     <text
-                      x={markerX() + (mi() - (markers.length - 1) / 2) * 24}
+                      x={markerX() + (mi() - (markers().length - 1) / 2) * 24}
                       y={markerRowY()}
                       text-anchor="middle"
-                      class={`custom-marker-text ${m.className ?? ''}`.trim()}
+                      class={['custom-marker-text', m.className]}
                     >
                       <tspan>{m.label}</tspan>
                       <Show when={m.details}>

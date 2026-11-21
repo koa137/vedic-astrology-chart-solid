@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import solid from 'vite-plugin-solid';
+import solid from '@solidjs/vite-plugin';
 import { resolve } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -19,13 +19,15 @@ export default defineConfig({
       name: 'VedicAstrologyChartSolid',
       formats: ['es', 'cjs'],
       fileName: (format) => `index.${format === 'es' ? 'esm' : format}.js`,
+      // Keep 1.x's stylesheet name for consumers importing dist/style.css.
+      cssFileName: 'style',
     },
     rollupOptions: {
-      external: ['solid-js', 'solid-js/web'],
+      external: ['solid-js', '@solidjs/web'],
       output: {
         globals: {
           'solid-js': 'SolidJS',
-          'solid-js/web': 'SolidJSWeb',
+          '@solidjs/web': 'SolidJSWeb',
         },
       },
     },
