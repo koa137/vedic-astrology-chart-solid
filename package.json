@@ -1,6 +1,6 @@
 {
   "name": "vedic-astrology-chart-solid",
-  "version": "1.2.3",
+  "version": "2.0.0",
   "type": "module",
   "description": "Beautiful Vedic (Jyotish) astrology chart component for SolidJS",
   "main": "dist/index.cjs.js",
@@ -61,10 +61,13 @@
   "author": "koa137",
   "license": "MIT",
   "peerDependencies": {
-    "solid-js": "^1.8.0"
+    "solid-js": "^2.0.0",
+    "@solidjs/web": "^2.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
+    "@solidjs/vite-plugin": "^3.0.1",
+    "@solidjs/web": "^2.0.3",
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
@@ -73,9 +76,8 @@
     "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-solid": "^0.14.0",
     "prettier": "^3.0.0",
-    "solid-js": "^1.9.9",
+    "solid-js": "^2.0.3",
     "typescript": "^5.0.0",
-    "vite": "^5.0.0",
-    "vite-plugin-solid": "^2.11.8"
+    "vite": "^8.3.8"
   }
 }

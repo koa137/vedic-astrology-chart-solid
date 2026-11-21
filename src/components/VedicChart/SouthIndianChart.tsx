@@ -103,27 +103,30 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
       {/* House content */}
       <For each={houses()}>
         {(house) => {
+          // The callback body isn't a tracking scope: what reads reactive
+          // state (the cell size, the markers) is an accessor.
           const pos = getHousePosition(house.number);
-          const center = getCellCenter(pos.row, pos.col);
+          const center = () => getCellCenter(pos.row, pos.col);
 
           const isFirstHouse = house.number === 1;
-          const markers = markersInHouse(house.number);
+          const markers = () => markersInHouse(house.number);
           // Custom markers sit in a row above the planets (or at the cell centre
           // when empty) and don't disturb the planet stack.
           const totalItems = house.planets.length + (isFirstHouse ? 1 : 0);
           const itemSpacing = 18;
-          const startY = center.y - ((totalItems - 1) * itemSpacing) / 2;
-          const markerY =
+          const startY = () =>
+            center().y - ((totalItems - 1) * itemSpacing) / 2;
+          const markerY = () =>
             house.planets.length > 0 || isFirstHouse
-              ? startY - itemSpacing
-              : center.y;
+              ? startY() - itemSpacing
+              : center().y;
 
           return (
             <g>
               <Show when={props.showHouseLabels ?? true}>
                 <text
-                  x={center.x - cellWidth() * 0.3}
-                  y={center.y - cellHeight() * 0.3}
+                  x={center().x - cellWidth() * 0.3}
+                  y={center().y - cellHeight() * 0.3}
                   text-anchor="middle"
                   class="house-label"
                 >
@@ -133,37 +136,29 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
 
               <For each={house.planets}>
                 {(planetName, planetIndex) => {
-                  // Get retrograde info
-                  const { retrogradeInfo } = normalizePlanetaryPositions(
-                    props.planets
-                  );
-                  const isRetrograde = retrogradeInfo[planetName];
+                  // Retrograde info, read reactively.
+                  const isRetrograde = () =>
+                    !!normalizePlanetaryPositions(props.planets).retrogradeInfo[
+                      planetName
+                    ];
 
-                  // Build CSS classes
-                  const planetClasses = [
-                    'planet-text',
-                    `planet-${planetName.toLowerCase()}`,
-                    isRetrograde ? 'retrograde' : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ');
-
-                  const planetX = center.x;
-
-                  // Create a reactive computation for the Y position
                   const planetY = () => {
                     const adjustedIndex = isFirstHouse
                       ? planetIndex() + 1
                       : planetIndex();
-                    return startY + adjustedIndex * itemSpacing;
+                    return startY() + adjustedIndex * itemSpacing;
                   };
 
                   return (
                     <text
-                      x={planetX}
+                      x={center().x}
                       y={planetY()}
                       text-anchor="middle"
-                      class={planetClasses} // Use CSS classes instead of inline styles
+                      class={[
+                        'planet-text',
+                        `planet-${planetName.toLowerCase()}`,
+                        { retrograde: isRetrograde() },
+                      ]}
                     >
                       <tspan class="planet-symbol">
                         {getPlanetDisplay(
@@ -190,13 +185,13 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
 
               {/* Custom markers along the cell's bottom edge — a horizontal row
                   so several padas sit side by side, without disturbing planets. */}
-              <For each={markers}>
+              <For each={markers()}>
                 {(m, mi) => (
                   <text
-                    x={center.x + (mi() - (markers.length - 1) / 2) * 24}
-                    y={markerY}
+                    x={center().x + (mi() - (markers().length - 1) / 2) * 24}
+                    y={markerY()}
                     text-anchor="middle"
-                    class={`custom-marker-text ${m.className ?? ''}`.trim()}
+                    class={['custom-marker-text', m.className]}
                   >
                     <tspan>{m.label}</tspan>
                     <Show when={m.details}>
