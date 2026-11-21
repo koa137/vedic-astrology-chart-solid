@@ -2,6 +2,7 @@ import { Component, For, Show } from 'solid-js';
 import { PlanetName, VedicChartProps } from '../../types';
 import {
   calculateHouses,
+  degreeToSign,
   getPlanetDegree,
   getPlanetDisplay,
   normalizePlanetaryPositions, // Add this import
@@ -18,8 +19,22 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
     calculateHouses(
       props.planets,
       props.ascendant,
-      props.allowKetuOverride || false
+      props.allowKetuOverride || false,
+      false,
+      props.ascendant,
+      props.placements
     );
+
+  // A body's own sign, for its label: a placed body sits in another sign's
+  // cell but keeps its own sign.
+  const planetSign = (p: PlanetName): string => {
+    const { positions } = normalizePlanetaryPositions(props.planets);
+    const lon =
+      p === 'Ketu' && !(props.allowKetuOverride || false)
+        ? ((positions.Rahu ?? 0) + 180) % 360
+        : (positions[p] ?? 0);
+    return degreeToSign(lon);
+  };
 
   const cellWidth = () => (props.width || 600) / 4;
   const cellHeight = () => (props.height || 600) / 4;
@@ -177,7 +192,10 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
                       </tspan>
                       <tspan class="planet-details">
                         {' '}
-                        {house().sign.substring(0, 3)}{' '}
+                        {planetSign(planetName as PlanetName).substring(
+                          0,
+                          3
+                        )}{' '}
                         {getPlanetDegree(
                           planetName as PlanetName,
                           props.planets,
