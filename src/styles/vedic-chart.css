@@ -34,7 +34,7 @@
 
 /* A small superscript after a body's name (e.g. its chara karaka) */
 .vedic-chart .planet-tag {
-  font-size: calc(8px * var(--vedic-font-scale, 1));
+  font-size: calc(6.5px * var(--vedic-font-scale, 1));
   font-weight: normal;
   fill: #666666;
 }
