@@ -1,6 +1,6 @@
 {
   "name": "vedic-astrology-chart-solid",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "type": "module",
   "description": "Beautiful Vedic (Jyotish) astrology chart component for SolidJS",
   "main": "dist/index.cjs.js",

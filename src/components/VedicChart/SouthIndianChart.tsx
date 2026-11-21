@@ -190,18 +190,23 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
                           props.showRetrograde ?? true
                         )}
                       </tspan>
-                      <tspan class="planet-details">
-                        {' '}
-                        {planetSign(planetName as PlanetName).substring(
-                          0,
-                          3
-                        )}{' '}
-                        {getPlanetDegree(
-                          planetName as PlanetName,
-                          props.planets,
-                          props.allowKetuOverride || false,
-                          props.showRetrograde ?? true
-                        )}
+                      <Show when={props.tags?.[planetName]}>
+                        <tspan class="planet-tag" dy="-0.55em">
+                          {props.tags?.[planetName]}
+                        </tspan>
+                      </Show>
+                      <tspan
+                        class="planet-details"
+                        dy={props.tags?.[planetName] ? '0.55em' : undefined}
+                      >
+                        {props.details?.[planetName] !== undefined
+                          ? ` ${props.details[planetName]}`
+                          : ` ${planetSign(planetName as PlanetName).substring(0, 3)} ${getPlanetDegree(
+                              planetName as PlanetName,
+                              props.planets,
+                              props.allowKetuOverride || false,
+                              props.showRetrograde ?? true
+                            )}`}
                       </tspan>
                     </text>
                   );
@@ -260,9 +265,9 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
             >
               <tspan>ASC</tspan>
               <tspan class="planet-details">
-                {' '}
-                {getAscendantSign(props.ascendant)}{' '}
-                {formatAscendantDegree(props.ascendant)}
+                {props.ascendantDetails !== undefined
+                  ? ` ${props.ascendantDetails}`
+                  : ` ${getAscendantSign(props.ascendant)} ${formatAscendantDegree(props.ascendant)}`}
               </tspan>
             </text>
           );

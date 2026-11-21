@@ -32,6 +32,13 @@
   fill: #666666;
 }
 
+/* A small superscript after a body's name (e.g. its chara karaka) */
+.vedic-chart .planet-tag {
+  font-size: calc(8px * var(--vedic-font-scale, 1));
+  font-weight: normal;
+  fill: #666666;
+}
+
 /* Custom markers (arudhas, special lagnas, …) — small and unobtrusive */
 .vedic-chart .custom-marker-text {
   font-size: calc(9px * var(--vedic-font-scale, 1));
