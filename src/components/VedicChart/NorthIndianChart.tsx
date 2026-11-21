@@ -197,6 +197,35 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
   const ascHouseNumber = () =>
     ((signOfLon(ascLongitude()) - signOfLon(props.ascendant) + 12) % 12) + 1;
 
+  // A longitude's place along the zodiac from the start of a house's sign, in
+  // (-180, 180]: a Bhava Chalit body from the previous sign comes before one
+  // in the house's own sign.
+  const offsetInHouse = (lon: number, houseNum: number) => {
+    const start = ((signOfLon(props.ascendant) + houseNum - 1) % 12) * 30;
+    return ((((lon - start) % 360) + 540) % 360) - 180;
+  };
+  // Each house stacks its bodies by degree, as in Parasara's Light: houses
+  // 1–6 rising from the top, houses 7–12 falling.
+  const stackKey = (lon: number, houseNum: number) =>
+    houseNum <= 6
+      ? offsetInHouse(lon, houseNum)
+      : -offsetInHouse(lon, houseNum);
+  const orderedPlanets = (house: { number: number; planets: string[] }) =>
+    house.planets
+      .map((p) => ({
+        p,
+        key: stackKey(planetLongitude(p as PlanetName), house.number),
+      }))
+      .sort((a, b) => a.key - b.key)
+      .map((x) => x.p);
+  // The ASC's slot in its house's stack: after every body that sorts before it.
+  const ascSlot = (house: { number: number; planets: string[] }) => {
+    const asc = stackKey(ascLongitude(), house.number);
+    return house.planets.filter(
+      (p) => stackKey(planetLongitude(p as PlanetName), house.number) < asc
+    ).length;
+  };
+
   const symbolOf = (p: PlanetName) =>
     getPlanetDisplay(
       p,
@@ -358,8 +387,8 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
           // The callback body isn't a tracking scope: everything that reads
           // reactive state is an accessor, read where it's used.
           const centroid = () => planetCentroids().find((c) => c.num === num);
-          // The house that holds the ASC marker reserves its top slot for ASC,
-          // so its planets shift down one.
+          // The house that holds the ASC marker gives it a slot in the stack
+          // (by degree, like the planets).
           const isAscHouse = () => num === ascHouseNumber();
           const markers = () => markersInHouse(num);
           const itemSpacing = rowSpacing;
@@ -387,7 +416,7 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
               }
             >
               <g>
-                <For each={house().planets}>
+                <For each={orderedPlanets(house())}>
                   {(planetName, planetIndex) => {
                     // Retrograde info + absolute longitudes, read reactively.
                     const normalized = () =>
@@ -403,9 +432,10 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
                       symbolWidth(symbolOf(planetName as PlanetName));
 
                     const planetY = () => {
-                      const adjustedIndex = isAscHouse()
-                        ? planetIndex() + 1
-                        : planetIndex();
+                      const adjustedIndex =
+                        isAscHouse() && planetIndex() >= ascSlot(house())
+                          ? planetIndex() + 1
+                          : planetIndex();
                       return startY() + adjustedIndex * itemSpacing();
                     };
 
@@ -498,12 +528,13 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
           const ascCentroid = planetCentroids().find(
             (c) => c.num === ascHouseNumber()
           )!;
-          // ASC takes the top slot; any planets in this house sit below it, so
-          // count them for centring (matches the planet loop).
+          // ASC takes its slot among this house's planets by degree; count them
+          // for centring (matches the planet loop).
           const totalItems = ascHouse.planets.length + 1;
           const itemSpacing = rowSpacing();
           const totalHeight = (totalItems - 1) * itemSpacing;
-          const ascendantY = ascCentroid.y - totalHeight / 2;
+          const ascendantY =
+            ascCentroid.y - totalHeight / 2 + ascSlot(ascHouse) * itemSpacing;
           // Share the house's common left start so ASC lines up with any planets.
           const ascendantX = labelStartX(ascHouse);
 
