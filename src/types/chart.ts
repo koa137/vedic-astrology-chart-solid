@@ -48,6 +48,13 @@ export interface VedicChartProps extends VedicChartData {
    *  Pisces) instead of their own — e.g. a Bhava Chalit placement computed
    *  elsewhere. Their labels still show their own sign and degree. */
   placements?: Record<string, number>;
+  /** A body's label text after its name, replacing the default sign and
+   *  degree (e.g. "16°28' PSh" to show the nakshatra instead). */
+  details?: Record<string, string>;
+  /** A small superscript after a body's name (e.g. its chara karaka, "AK"). */
+  tags?: Record<string, string>;
+  /** The ASC label's text after "ASC", replacing its default sign and degree. */
+  ascendantDetails?: string;
   /** Extra labelled points to draw on the wheel (by whole sign), stacked under
    *  the planets in each house — e.g. arudha padas or special lagnas. */
   customMarkers?: CustomMarker[];

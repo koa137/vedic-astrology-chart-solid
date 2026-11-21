@@ -18,6 +18,9 @@ const VedicChart: Component<VedicChartProps> = (props) => {
     lagnaMarker: props.lagnaMarker,
     bhavaChalit: props.bhavaChalit,
     placements: props.placements,
+    details: props.details,
+    tags: props.tags,
+    ascendantDetails: props.ascendantDetails,
     customMarkers: props.customMarkers,
   });
 

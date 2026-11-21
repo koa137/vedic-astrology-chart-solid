@@ -39,11 +39,12 @@ function fontScale(): number {
   );
   return Number.isFinite(v) && v > 0 ? v : 1;
 }
-// Must match .planet-text / .planet-details in vedic-chart.css.
-const labelWidth = (symbol: string, details: string): number => {
+// Must match .planet-text / .planet-tag / .planet-details in vedic-chart.css.
+const labelWidth = (symbol: string, details: string, tag = ''): number => {
   const k = fontScale();
   return (
     textWidth(symbol, `bold ${12 * k}px Arial, sans-serif`) +
+    (tag ? textWidth(tag, `${8 * k}px Arial, sans-serif`) : 0) +
     textWidth(details, `${10 * k}px Arial, sans-serif`)
   );
 };
@@ -228,13 +229,23 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
       props.planets,
       props.showRetrograde ?? true
     );
+  // A body's label after its name: the caller's text, or its sign and degree.
   const detailsOf = (p: PlanetName) =>
-    ` ${planetSign(p).substring(0, 3)} ${getPlanetDegree(
-      p,
-      props.planets,
-      props.allowKetuOverride || false,
-      props.showRetrograde ?? true
-    )}`;
+    props.details?.[p] !== undefined
+      ? ` ${props.details[p]}`
+      : ` ${planetSign(p).substring(0, 3)} ${getPlanetDegree(
+          p,
+          props.planets,
+          props.allowKetuOverride || false,
+          props.showRetrograde ?? true
+        )}`;
+  const tagOf = (p: string) => props.tags?.[p] ?? '';
+  const ascDetails = () =>
+    props.ascendantDetails !== undefined
+      ? ` ${props.ascendantDetails}`
+      : ` ${getAscendantSign(ascLongitude())} ${formatAscendantDegree(
+          ascLongitude()
+        )}`;
 
   // The common left start for every label in a house: centre the block on its
   // widest label (so a lone planet is centred and stacked planets line up),
@@ -250,14 +261,15 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
     for (const p of house.planets) {
       maxW = Math.max(
         maxW,
-        labelWidth(symbolOf(p as PlanetName), detailsOf(p as PlanetName))
+        labelWidth(
+          symbolOf(p as PlanetName),
+          detailsOf(p as PlanetName),
+          tagOf(p)
+        )
       );
     }
     if (house.number === ascHouseNumber()) {
-      const details = ` ${getAscendantSign(ascLongitude())} ${formatAscendantDegree(
-        ascLongitude()
-      )}`;
-      maxW = Math.max(maxW, labelWidth('ASC', details));
+      maxW = Math.max(maxW, labelWidth('ASC', ascDetails()));
     }
     const sz = size();
     const pad = sz * 0.015;
@@ -451,18 +463,16 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
                             props.showRetrograde ?? true
                           )}
                         </tspan>
-                        <tspan class="planet-details">
-                          {' '}
-                          {planetSign(planetName as PlanetName).substring(
-                            0,
-                            3
-                          )}{' '}
-                          {getPlanetDegree(
-                            planetName as PlanetName,
-                            props.planets,
-                            props.allowKetuOverride || false,
-                            props.showRetrograde ?? true
-                          )}
+                        <Show when={tagOf(planetName)}>
+                          <tspan class="planet-tag" dy="-0.55em">
+                            {tagOf(planetName)}
+                          </tspan>
+                        </Show>
+                        <tspan
+                          class="planet-details"
+                          dy={tagOf(planetName) ? '0.55em' : undefined}
+                        >
+                          {detailsOf(planetName as PlanetName)}
                         </tspan>
                       </text>
                     );
@@ -525,11 +535,7 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
               class="ascendant-text"
             >
               <tspan>ASC</tspan>
-              <tspan class="planet-details">
-                {' '}
-                {getAscendantSign(ascLongitude())}{' '}
-                {formatAscendantDegree(ascLongitude())}
-              </tspan>
+              <tspan class="planet-details">{ascDetails()}</tspan>
             </text>
           );
         })()}
