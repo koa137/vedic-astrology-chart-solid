@@ -8,6 +8,12 @@ import {
   normalizePlanetaryPositions, // Add this import
 } from '../../utils';
 import { formatAscendantDegree, getAscendantSign } from './utils/helpers';
+import {
+  detailsWidth,
+  labelWidth,
+  symbolWidth,
+  tagRise,
+} from './utils/measure';
 import '../../styles/vedic-chart.css';
 
 type ChartProps = Omit<VedicChartProps, 'style'> & {
@@ -15,6 +21,10 @@ type ChartProps = Omit<VedicChartProps, 'style'> & {
 };
 
 const SouthIndianChart: Component<ChartProps> = (props) => {
+  // Rows of labels in a house; a little roomier when superscript tags rise
+  // above the details.
+  const rowSpacing = () =>
+    props.tags && Object.keys(props.tags).length ? 21 : 18;
   const houses = () =>
     calculateHouses(
       props.planets,
@@ -135,12 +145,12 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
           // when empty) and don't disturb the planet stack.
           const totalItems = () =>
             house().planets.length + (isFirstHouse ? 1 : 0);
-          const itemSpacing = 18;
+          const itemSpacing = rowSpacing;
           const startY = () =>
-            center().y - ((totalItems() - 1) * itemSpacing) / 2;
+            center().y - ((totalItems() - 1) * itemSpacing()) / 2;
           const markerY = () =>
             house().planets.length > 0 || isFirstHouse
-              ? startY() - itemSpacing
+              ? startY() - itemSpacing()
               : center().y;
 
           return (
@@ -168,45 +178,59 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
                     const adjustedIndex = isFirstHouse
                       ? planetIndex() + 1
                       : planetIndex();
-                    return startY() + adjustedIndex * itemSpacing;
+                    return startY() + adjustedIndex * itemSpacing();
                   };
+
+                  const symbol = () =>
+                    getPlanetDisplay(
+                      planetName as PlanetName,
+                      props.planetDisplayMode || 'symbols',
+                      props.planets,
+                      props.showRetrograde ?? true
+                    );
+                  const details = () =>
+                    props.details?.[planetName] !== undefined
+                      ? ` ${props.details[planetName]}`
+                      : ` ${planetSign(planetName as PlanetName).substring(0, 3)} ${getPlanetDegree(
+                          planetName as PlanetName,
+                          props.planets,
+                          props.allowKetuOverride || false,
+                          props.showRetrograde ?? true
+                        )}`;
+                  const tag = () => props.tags?.[planetName] ?? '';
+                  // Centred on the cell, laid out from its left edge so a tag
+                  // can sit above the start of the details.
+                  const startX = () =>
+                    center().x - labelWidth(symbol(), details(), tag()) / 2;
+                  const detailsX = () => startX() + symbolWidth(symbol());
 
                   return (
                     <text
-                      x={center().x}
+                      x={startX()}
                       y={planetY()}
-                      text-anchor="middle"
+                      text-anchor="start"
                       class={[
                         'planet-text',
                         `planet-${planetName.toLowerCase()}`,
                         { retrograde: isRetrograde() },
                       ]}
                     >
-                      <tspan class="planet-symbol">
-                        {getPlanetDisplay(
-                          planetName as PlanetName,
-                          props.planetDisplayMode || 'symbols',
-                          props.planets,
-                          props.showRetrograde ?? true
-                        )}
-                      </tspan>
-                      <Show when={props.tags?.[planetName]}>
-                        <tspan class="planet-tag" dy="-0.55em">
-                          {props.tags?.[planetName]}
+                      <tspan class="planet-symbol">{symbol()}</tspan>
+                      <Show when={tag()}>
+                        <tspan
+                          class="planet-tag"
+                          x={detailsX() + detailsWidth(' ')}
+                          dy={-tagRise()}
+                        >
+                          {tag()}
                         </tspan>
                       </Show>
                       <tspan
                         class="planet-details"
-                        dy={props.tags?.[planetName] ? '0.55em' : undefined}
+                        x={tag() ? detailsX() : undefined}
+                        dy={tag() ? tagRise() : undefined}
                       >
-                        {props.details?.[planetName] !== undefined
-                          ? ` ${props.details[planetName]}`
-                          : ` ${planetSign(planetName as PlanetName).substring(0, 3)} ${getPlanetDegree(
-                              planetName as PlanetName,
-                              props.planets,
-                              props.allowKetuOverride || false,
-                              props.showRetrograde ?? true
-                            )}`}
+                        {details()}
                       </tspan>
                     </text>
                   );
@@ -251,7 +275,7 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
           );
 
           const totalItems = firstHouse.planets.length + 1;
-          const itemSpacing = 18;
+          const itemSpacing = rowSpacing();
           const totalHeight = (totalItems - 1) * itemSpacing;
           const startY = firstHouseCenter.y - totalHeight / 2;
           const ascendantY = startY;

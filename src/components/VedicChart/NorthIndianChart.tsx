@@ -8,48 +8,23 @@ import {
   normalizePlanetaryPositions,
 } from '../../utils';
 import { formatAscendantDegree, getAscendantSign } from './utils/helpers';
+import {
+  detailsWidth,
+  labelWidth,
+  symbolWidth,
+  tagRise,
+} from './utils/measure';
 import '../../styles/vedic-chart.css';
 
 type ChartProps = Omit<VedicChartProps, 'style'> & {
   showRetrograde?: boolean;
 };
 
-// Measure rendered label widths (bold symbol + normal details) so a house can
-// be centred on its widest label while every label shares one left start.
-let measureCtx: CanvasRenderingContext2D | null | undefined;
-function textWidth(text: string, font: string): number {
-  if (measureCtx === undefined) {
-    measureCtx =
-      typeof document !== 'undefined'
-        ? document.createElement('canvas').getContext('2d')
-        : null;
-  }
-  if (!measureCtx) return text.length * 7; // SSR / no-canvas fallback
-  measureCtx.font = font;
-  return measureCtx.measureText(text).width;
-}
-// The labels' font scale: the `--vedic-font-scale` custom property the
-// stylesheet sizes them by (set on the document root).
-function fontScale(): number {
-  if (typeof document === 'undefined') return 1;
-  const v = parseFloat(
-    window
-      .getComputedStyle(document.documentElement)
-      .getPropertyValue('--vedic-font-scale')
-  );
-  return Number.isFinite(v) && v > 0 ? v : 1;
-}
-// Must match .planet-text / .planet-tag / .planet-details in vedic-chart.css.
-const labelWidth = (symbol: string, details: string, tag = ''): number => {
-  const k = fontScale();
-  return (
-    textWidth(symbol, `bold ${12 * k}px Arial, sans-serif`) +
-    (tag ? textWidth(tag, `${8 * k}px Arial, sans-serif`) : 0) +
-    textWidth(details, `${10 * k}px Arial, sans-serif`)
-  );
-};
-
 const NorthIndianChart: Component<ChartProps> = (props) => {
+  // Rows of labels in a house; a little roomier when superscript tags rise
+  // above the details.
+  const rowSpacing = () =>
+    props.tags && Object.keys(props.tags).length ? 21 : 18;
   const houses = () =>
     calculateHouses(
       props.planets,
@@ -387,20 +362,20 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
           // so its planets shift down one.
           const isAscHouse = () => num === ascHouseNumber();
           const markers = () => markersInHouse(num);
-          const itemSpacing = 18;
+          const itemSpacing = rowSpacing;
           // Custom markers sit at the house periphery and don't disturb the
           // planet stack (planets + ASC only).
           const totalItems = () =>
             house().planets.length + (isAscHouse() ? 1 : 0);
           const startY = () =>
-            (centroid()?.y ?? 0) - ((totalItems() - 1) * itemSpacing) / 2;
+            (centroid()?.y ?? 0) - ((totalItems() - 1) * itemSpacing()) / 2;
           // Custom markers: centred on the house, in a row just above the planet
           // stack (or at the house centre when the house holds no planets).
           const markerX = () => centroid()?.x ?? centerX();
           const markerRowY = () => {
             const hasContent = house().planets.length > 0 || isAscHouse();
             return hasContent
-              ? startY() - itemSpacing
+              ? startY() - itemSpacing()
               : (centroid()?.y ?? centerY());
           };
 
@@ -423,12 +398,15 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
                     // Every label in the house shares one left start (centred on
                     // the widest label, clamped to the borders).
                     const planetX = () => labelStartX(house());
+                    const detailsX = () =>
+                      planetX() +
+                      symbolWidth(symbolOf(planetName as PlanetName));
 
                     const planetY = () => {
                       const adjustedIndex = isAscHouse()
                         ? planetIndex() + 1
                         : planetIndex();
-                      return startY() + adjustedIndex * itemSpacing;
+                      return startY() + adjustedIndex * itemSpacing();
                     };
 
                     return (
@@ -456,21 +434,23 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
                         ]}
                       >
                         <tspan class="planet-symbol">
-                          {getPlanetDisplay(
-                            planetName as PlanetName,
-                            props.planetDisplayMode || 'symbols',
-                            props.planets,
-                            props.showRetrograde ?? true
-                          )}
+                          {symbolOf(planetName as PlanetName)}
                         </tspan>
+                        {/* A tag sits above the start of the details, which
+                            then continue from the symbol on the baseline. */}
                         <Show when={tagOf(planetName)}>
-                          <tspan class="planet-tag" dy="-0.55em">
+                          <tspan
+                            class="planet-tag"
+                            x={detailsX() + detailsWidth(' ')}
+                            dy={-tagRise()}
+                          >
                             {tagOf(planetName)}
                           </tspan>
                         </Show>
                         <tspan
                           class="planet-details"
-                          dy={tagOf(planetName) ? '0.55em' : undefined}
+                          x={tagOf(planetName) ? detailsX() : undefined}
+                          dy={tagOf(planetName) ? tagRise() : undefined}
                         >
                           {detailsOf(planetName as PlanetName)}
                         </tspan>
@@ -521,7 +501,7 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
           // ASC takes the top slot; any planets in this house sit below it, so
           // count them for centring (matches the planet loop).
           const totalItems = ascHouse.planets.length + 1;
-          const itemSpacing = 18;
+          const itemSpacing = rowSpacing();
           const totalHeight = (totalItems - 1) * itemSpacing;
           const ascendantY = ascCentroid.y - totalHeight / 2;
           // Share the house's common left start so ASC lines up with any planets.
