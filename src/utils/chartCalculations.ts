@@ -38,7 +38,9 @@ export function calculateHouses(
   // but when the chart is rotated to view from another lagna the caller passes
   // the natal ascendant here so the physical bhava cusps don't move — only the
   // house numbering rotates.
-  cuspAscendant: number = ascendant
+  cuspAscendant: number = ascendant,
+  // Bodies drawn in the house of a given sign (0–11) rather than their own.
+  placements: Record<string, number> = {}
 ): HouseInfo[] {
   // Normalize planetary positions first
   const { positions: normalizedPlanets } = normalizePlanetaryPositions(planets);
@@ -71,7 +73,11 @@ export function calculateHouses(
     }
 
     let houseNumber: number;
-    if (bhavaChalit) {
+    const placedSign = placements[planetName];
+    if (placedSign !== undefined) {
+      const ascendantSignIndex = Math.floor(ascendantSignStart / 30);
+      houseNumber = ((placedSign - ascendantSignIndex + 12) % 12) + 1;
+    } else if (bhavaChalit) {
       // Bhava Chalit (equal, longitude-only): the ascendant sits at the middle
       // of the 1st bhava, so cusps fall at lagna ± 15°, ± 45°, … A planet's
       // bhava is the 30° segment centred on each cusp. The cusps are fixed by

@@ -57,7 +57,8 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
       props.bhavaChalit || false,
       // Fix Bhava Chalit cusps to the natal ascendant so rotating the lagna
       // renumbers houses without moving planets between physical bhavas.
-      props.lagnaMarker ?? props.ascendant
+      props.lagnaMarker ?? props.ascendant,
+      props.placements
     );
 
   // A planet's own sidereal longitude (respecting the Ketu override) and its

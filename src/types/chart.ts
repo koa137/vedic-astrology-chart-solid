@@ -44,6 +44,10 @@ export interface VedicChartProps extends VedicChartData {
   /** Draw the Bhava Chalit chart: place planets by equal house cusps (ascendant
    *  at the middle of the 1st bhava) instead of by whole sign. */
   bhavaChalit?: boolean;
+  /** Draw these bodies in the house of the given sign (0 = Aries … 11 =
+   *  Pisces) instead of their own — e.g. a Bhava Chalit placement computed
+   *  elsewhere. Their labels still show their own sign and degree. */
+  placements?: Record<string, number>;
   /** Extra labelled points to draw on the wheel (by whole sign), stacked under
    *  the planets in each house — e.g. arudha padas or special lagnas. */
   customMarkers?: CustomMarker[];
