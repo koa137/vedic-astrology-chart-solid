@@ -24,7 +24,8 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
   // Rows of labels in a house; a little roomier when superscript tags rise
   // above the details.
   const rowSpacing = () =>
-    props.tags && Object.keys(props.tags).length ? 21 : 18;
+    (props.tags && Object.keys(props.tags).length ? 21 : 18) *
+    (props.rowSpacing ?? 1);
   const houses = () =>
     calculateHouses(
       props.planets,
