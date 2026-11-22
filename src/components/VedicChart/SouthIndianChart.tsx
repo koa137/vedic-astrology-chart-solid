@@ -77,7 +77,7 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
         details: detailsOf(p as PlanetName),
         tag: tagOf(p),
       })),
-      ...(house.number === 1 ? [{ symbol: 'ASC', details: ascDetails() }] : []),
+      ...(house.number === 1 ? [{ symbol: 'As', details: ascDetails() }] : []),
     ]);
     const x = getCellCenter(pos.row, pos.col).x - width / 2;
     return { x, detailsX: x + column };
@@ -193,9 +193,10 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
           return (
             <g>
               <Show when={props.showHouseLabels ?? true}>
+                {/* Tucked into the corner, clear of a full cell's top row. */}
                 <text
-                  x={center().x - cellWidth() * 0.3}
-                  y={center().y - cellHeight() * 0.3}
+                  x={center().x - cellWidth() * 0.38}
+                  y={center().y - cellHeight() * 0.34}
                   text-anchor="middle"
                   class="house-label"
                 >
@@ -311,7 +312,7 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
               text-anchor="start"
               class="ascendant-text"
             >
-              <tspan>ASC</tspan>
+              <tspan>As</tspan>
               <tspan class="planet-details" x={block.detailsX}>
                 {ascDetails()}
               </tspan>

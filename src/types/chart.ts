@@ -37,9 +37,9 @@ export interface VedicChartProps extends VedicChartData {
   /** Right-click a planet or house to view the chart from it: called with the
    *  ecliptic longitude to use as the new ascendant (rotates the chart). */
   onSelectLagna?: (longitude: number) => void;
-  /** Longitude to draw the "ASC" marker at. Defaults to `ascendant`. When the
+  /** Longitude to draw the ascendant ("As") marker at. Defaults to `ascendant`. When the
    *  chart is rotated to view from another lagna, pass the real natal ascendant
-   *  here so ASC stays at its actual position instead of moving to house 1. */
+   *  here so the ascendant stays at its actual position instead of moving to house 1. */
   lagnaMarker?: number;
   /** Draw the Bhava Chalit chart: place planets by equal house cusps (ascendant
    *  at the middle of the 1st bhava) instead of by whole sign. */
@@ -53,7 +53,7 @@ export interface VedicChartProps extends VedicChartData {
   details?: Record<string, string>;
   /** A small superscript after a body's name (e.g. its chara karaka, "AK"). */
   tags?: Record<string, string>;
-  /** The ASC label's text after "ASC", replacing its default sign and degree. */
+  /** The ascendant label's text after "As", replacing its default sign and degree. */
   ascendantDetails?: string;
   /** Extra labelled points to draw on the wheel (by whole sign), stacked under
    *  the planets in each house — e.g. arudha padas or special lagnas. */

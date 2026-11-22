@@ -257,7 +257,7 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
         tag: tagOf(p),
       })),
       ...(house.number === ascHouseNumber()
-        ? [{ symbol: 'ASC', details: ascDetails() }]
+        ? [{ symbol: 'As', details: ascDetails() }]
         : []),
     ]);
 
@@ -549,7 +549,7 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
               text-anchor="start"
               class="ascendant-text"
             >
-              <tspan>ASC</tspan>
+              <tspan>As</tspan>
               <tspan
                 class="planet-details"
                 x={ascendantX + houseBlock(ascHouse).column}

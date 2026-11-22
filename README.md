@@ -89,9 +89,18 @@ function MyChart() {
 
 ## Example Charts
 
-<img width="625" height="759" alt="Screenshot 2025-08-20 at 14 12 14" src="https://github.com/user-attachments/assets/6bf7882c-2247-47b7-88b5-a95e60213a30" />
+Albert Einstein's chart (14 March 1879, 11:30 LMT, Ulm; Lahiri ayanamsa).
 
-<img width="625" height="736" alt="Screenshot 2025-08-20 at 14 12 32" src="https://github.com/user-attachments/assets/60016f0d-f3f0-4018-ab93-a66d2b834e14" />
+| North Indian | South Indian |
+| --- | --- |
+| <img src="docs/images/north.png" width="400" alt="North Indian chart of Albert Einstein" /> | <img src="docs/images/south.png" width="400" alt="South Indian chart of Albert Einstein" /> |
+
+With `details` (degree and nakshatra), `tags` (chara karakas) and `ascendantDetails`, themed
+through the stylesheet's classes (the dark palette from the jyotish-rs app):
+
+| North Indian | South Indian |
+| --- | --- |
+| <img src="docs/images/north-details.png" width="400" alt="North Indian chart with nakshatras and chara karakas, dark theme" /> | <img src="docs/images/south-details.png" width="400" alt="South Indian chart with nakshatras and chara karakas, dark theme" /> |
 
 ## API Reference
 
