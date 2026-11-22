@@ -196,6 +196,7 @@
 }
 
 .vedic-chart .planet-text.retrograde .planet-symbol {
+  /* Straight: Chromium (Windows' WebView2) draws a wavy underline jagged at
+     this size, while WebKit (macOS) draws SVG underlines straight anyway. */
   text-decoration: underline;
-  text-decoration-style: wavy;
 }
