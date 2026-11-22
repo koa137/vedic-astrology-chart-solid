@@ -2,6 +2,7 @@
 export { default as VedicChart } from './components/VedicChart/VedicChart';
 export { default as NorthIndianChart } from './components/VedicChart/NorthIndianChart';
 export { default as SouthIndianChart } from './components/VedicChart/SouthIndianChart';
+export { default as CircleChart } from './components/VedicChart/CircleChart';
 
 // Type exports
 export type {

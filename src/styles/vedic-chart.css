@@ -200,3 +200,38 @@
      this size, while WebKit (macOS) draws SVG underlines straight anyway. */
   text-decoration: underline;
 }
+
+/* Circle (Western-style) wheel */
+.vedic-chart .sign-label {
+  font-size: calc(13px * var(--vedic-font-scale, 1));
+  fill: #666666;
+  user-select: none;
+}
+.vedic-chart .vedic-chart-circle .wheel-cusp {
+  stroke-opacity: 0.35;
+}
+.vedic-chart .vedic-chart-circle .wheel-tick {
+  stroke-width: 1;
+}
+.vedic-chart .wheel-asc-line {
+  stroke: #333333;
+  stroke-width: 2.5;
+}
+.vedic-chart .wheel-pointer {
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+.vedic-chart .wheel-leader {
+  stroke-width: 0.75;
+  stroke-opacity: 0.5;
+}
+.vedic-chart .wheel-body {
+  color: #666666;
+}
+.vedic-chart .vedic-chart-circle .planet-symbol {
+  font-size: calc(14px * var(--vedic-font-scale, 1));
+}
+.vedic-chart .vedic-chart-circle.wheel-symbols .planet-symbol,
+.vedic-chart .vedic-chart-circle.wheel-symbols .sign-label {
+  font-size: calc(17px * var(--vedic-font-scale, 1));
+}
