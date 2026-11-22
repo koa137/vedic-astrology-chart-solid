@@ -15,6 +15,46 @@ function textWidth(text: string, font: string): number {
   return measureCtx.measureText(text).width;
 }
 
+/** One symbol font for every astrological glyph, so they share a design:
+ *  Apple Symbols (macOS), Segoe UI Symbol (Windows), then common fallbacks. */
+export const GLYPH_FONT =
+  '"Apple Symbols", "Segoe UI Symbol", "Noto Sans Symbols 2", "Noto Sans Symbols", "DejaVu Sans", sans-serif';
+
+const fits = new Map<string, { size: number; dx: number; dy: number }>();
+/** Fit a glyph's ink into a `box`-pixel square, centred on a point: the font
+ *  size that makes its larger ink dimension `box`, and the offsets from the
+ *  point to draw it at (text-anchor start, alphabetic baseline). Glyphs from
+ *  any font then match in size and sit exactly on their point. */
+export function glyphFit(
+  text: string,
+  box: number
+): { size: number; dx: number; dy: number } {
+  const key = `${text}|${box}`;
+  const hit = fits.get(key);
+  if (hit) return hit;
+  textWidth('', '10px sans-serif'); // creates the canvas context
+  let out = { size: box, dx: -box / 2, dy: box / 2 };
+  if (measureCtx) {
+    measureCtx.font = `100px ${GLYPH_FONT}`;
+    const m = measureCtx.measureText(text);
+    const left = m.actualBoundingBoxLeft;
+    const right = m.actualBoundingBoxRight;
+    const up = m.actualBoundingBoxAscent;
+    const down = m.actualBoundingBoxDescent;
+    const ink = Math.max(left + right, up + down);
+    if (ink > 0) {
+      const k = box / ink; // per 100px of font size
+      out = {
+        size: 100 * k,
+        dx: (-k * (right - left)) / 2,
+        dy: (k * (up - down)) / 2,
+      };
+    }
+  }
+  fits.set(key, out);
+  return out;
+}
+
 /** How far right of its origin a text's ink starts (a glyph's left side
  *  bearing: Arial's "1" starts well inside its box). */
 function inkStart(text: string, font: string): number {

@@ -5,7 +5,13 @@ import {
   getPlanetDisplay,
   normalizePlanetaryPositions,
 } from '../../utils';
-import { detailsWidth, fontScale, symbolWidth } from './utils/measure';
+import {
+  GLYPH_FONT,
+  detailsWidth,
+  fontScale,
+  glyphFit,
+  symbolWidth,
+} from './utils/measure';
 import '../../styles/vedic-chart.css';
 
 type ChartProps = Omit<VedicChartProps, 'style'> & {
@@ -87,6 +93,42 @@ function spread(
   return out;
 }
 
+/** A lone symbol (☉, ♂, ♈…), as opposed to a name like "Su" or "Gu". */
+const isGlyph = (t: string) => {
+  const chars = [...t.replace(TEXT_STYLE, '')];
+  return chars.length === 1 && (chars[0].codePointAt(0) ?? 0) > 0x2000;
+};
+
+/** A symbol drawn in the shared glyph font, its ink fitted to a `box`-pixel
+ *  square centred on `at`. */
+const Glyph: Component<{
+  text: string;
+  at: { x: number; y: number };
+  box: number;
+  class?: string;
+  inner?: string;
+  clickable?: boolean;
+  onContextMenu?: (e: { preventDefault: () => void }) => void;
+}> = (p) => {
+  const fit = () => glyphFit(p.text, p.box);
+  return (
+    <text
+      x={p.at.x + fit().dx}
+      y={p.at.y + fit().dy}
+      class={p.class}
+      style={p.clickable ? { cursor: 'context-menu' } : undefined}
+      onContextMenu={(e) => p.onContextMenu?.(e)}
+    >
+      <tspan
+        class={p.inner}
+        style={{ 'font-family': GLYPH_FONT, 'font-size': `${fit().size}px` }}
+      >
+        {p.text}
+      </tspan>
+    </text>
+  );
+};
+
 /** A circular, Western-style wheel: the zodiac in an outer ring with the
  *  ascendant at 9 o'clock and the signs running counterclockwise, whole-sign
  *  houses numbered on an inner ring, and each body at its own degree (spread
@@ -124,8 +166,11 @@ const CircleChart: Component<ChartProps> = (props) => {
 
   // The wheel turns so `ascendant` sits on the left; longitudes increase
   // counterclockwise.
+  // The wheel turns so the 1st house's start (0° of the ascendant's sign)
+  // sits at 9 o'clock; longitudes increase counterclockwise.
+  const start = () => Math.floor(norm(props.ascendant) / 30) * 30;
   const point = (lon: number, r: number) => {
-    const a = Math.PI + ((lon - props.ascendant) * Math.PI) / 180;
+    const a = Math.PI + ((lon - start()) * Math.PI) / 180;
     return { x: cx() + r * Math.cos(a), y: cy() - r * Math.sin(a) };
   };
 
@@ -173,11 +218,17 @@ const CircleChart: Component<ChartProps> = (props) => {
   };
 
   // A label is a stack of lines from the rim inward: name, tag, details.
-  type Line = { text: string; cls?: string; w: number; h: number };
+  // `glyph`: draw the text as a fitted symbol in a square this many pixels.
+  type Line = {
+    text: string;
+    cls?: string;
+    w: number;
+    h: number;
+    glyph?: number;
+  };
   const rName = () => rSign() - 15 * fs();
   // Screen angle (radians) of a longitude.
-  const angle = (lon: number) =>
-    Math.PI + ((lon - props.ascendant) * Math.PI) / 180;
+  const angle = (lon: number) => Math.PI + ((lon - start()) * Math.PI) / 180;
 
   // Each line's radius at a given angle: far enough inward to clear the line
   // before it in whichever direction the stack runs (down at the top and
@@ -211,11 +262,10 @@ const CircleChart: Component<ChartProps> = (props) => {
     return (hw * 180) / Math.PI;
   };
 
-  const nameLine = (text: string): Line => ({
-    text,
-    w: symbolWidth(text) * (mode() === 'symbols' ? 1.6 : 1.15),
-    h: (mode() === 'symbols' ? 20 : 14) * fs(),
-  });
+  const nameLine = (text: string): Line =>
+    isGlyph(text)
+      ? { text, glyph: 16 * fs(), w: 16 * fs(), h: 16 * fs() }
+      : { text, w: symbolWidth(text) * 1.15, h: 14 * fs() };
   const tagLine = (text: string): Line => ({
     text,
     cls: 'planet-tag',
@@ -233,8 +283,9 @@ const CircleChart: Component<ChartProps> = (props) => {
       ? {
           text: SIGN_GLYPHS[s] + TEXT_STYLE,
           cls: `wheel-sign-token ${signClass(s)}`,
-          w: 13 * fs(),
-          h: 13 * fs(),
+          glyph: 10 * fs(),
+          w: 10 * fs(),
+          h: 10 * fs(),
         }
       : {
           text: SIGN_ABBRS[s],
@@ -424,23 +475,39 @@ const CircleChart: Component<ChartProps> = (props) => {
         {(s) => {
           const p = () => point(signAt(s), (R() + rScale()) / 2);
           return (
-            <text
-              x={p().x}
-              y={p().y}
-              text-anchor="middle"
-              dominant-baseline="central"
-              class={[
-                'sign-label',
-                `sign-${SIGN_ABBRS[s].toLowerCase()}`,
-                signClass(s),
-              ]}
-              style={clickable()}
-              onContextMenu={(e) => select(e, s * 30)}
+            <Show
+              when={mode() === 'symbols'}
+              fallback={
+                <text
+                  x={p().x}
+                  y={p().y}
+                  text-anchor="middle"
+                  dominant-baseline="central"
+                  class={[
+                    'sign-label',
+                    `sign-${SIGN_ABBRS[s].toLowerCase()}`,
+                    signClass(s),
+                  ]}
+                  style={clickable()}
+                  onContextMenu={(e) => select(e, s * 30)}
+                >
+                  {SIGN_ABBRS[s]}
+                </text>
+              }
             >
-              {mode() === 'symbols'
-                ? SIGN_GLYPHS[s] + TEXT_STYLE
-                : SIGN_ABBRS[s]}
-            </text>
+              <Glyph
+                text={SIGN_GLYPHS[s] + TEXT_STYLE}
+                at={p()}
+                box={17 * fs()}
+                class={[
+                  'sign-label',
+                  `sign-${SIGN_ABBRS[s].toLowerCase()}`,
+                  signClass(s),
+                ].join(' ')}
+                onContextMenu={(e) => select(e, s * 30)}
+                clickable={!!props.onSelectLagna}
+              />
+            </Show>
           );
         }}
       </For>
@@ -563,23 +630,33 @@ const CircleChart: Component<ChartProps> = (props) => {
                 </Show>
               </Show>
               <For each={it.lines}>
-                {(l, k) => (
-                  <text
-                    x={point(it.at, it.radii[k()]).x}
-                    y={point(it.at, it.radii[k()]).y}
-                    text-anchor="middle"
-                    dominant-baseline="central"
-                    class={k() === 0 ? undefined : l.cls}
-                  >
-                    {k() === 0 ? (
-                      <tspan class={it.isAsc ? undefined : 'planet-symbol'}>
-                        {l.text}
-                      </tspan>
-                    ) : (
-                      l.text
-                    )}
-                  </text>
-                )}
+                {(l, k) =>
+                  l.glyph ? (
+                    <Glyph
+                      text={l.text}
+                      at={point(it.at, it.radii[k()])}
+                      box={l.glyph}
+                      class={k() === 0 ? undefined : l.cls}
+                      inner={k() === 0 ? 'planet-symbol' : undefined}
+                    />
+                  ) : (
+                    <text
+                      x={point(it.at, it.radii[k()]).x}
+                      y={point(it.at, it.radii[k()]).y}
+                      text-anchor="middle"
+                      dominant-baseline="central"
+                      class={k() === 0 ? undefined : l.cls}
+                    >
+                      {k() === 0 ? (
+                        <tspan class={it.isAsc ? undefined : 'planet-symbol'}>
+                          {l.text}
+                        </tspan>
+                      ) : (
+                        l.text
+                      )}
+                    </text>
+                  )
+                }
               </For>
             </g>
           );

@@ -239,18 +239,9 @@
 .vedic-chart .vedic-chart-circle .planet-symbol {
   font-size: calc(14px * var(--vedic-font-scale, 1));
 }
-.vedic-chart .vedic-chart-circle.wheel-symbols .planet-symbol {
-  font-size: calc(20px * var(--vedic-font-scale, 1));
-}
-.vedic-chart .vedic-chart-circle.wheel-symbols .sign-label {
-  font-size: calc(19px * var(--vedic-font-scale, 1));
-}
 /* A sign in a label's details (3° ♒ 24'). */
 .vedic-chart .vedic-chart-circle .wheel-sign-token {
   font-size: calc(10px * var(--vedic-font-scale, 1));
-}
-.vedic-chart .vedic-chart-circle.wheel-symbols .wheel-sign-token {
-  font-size: calc(13px * var(--vedic-font-scale, 1));
 }
 /* Signs coloured by element. */
 .vedic-chart .sign-fire {
