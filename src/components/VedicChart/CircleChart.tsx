@@ -60,7 +60,8 @@ const norm = (x: number) => ((x % 360) + 360) % 360;
  *  moves as little as possible; returns them in input order. */
 function spread(
   angles: number[],
-  halfWidth: (i: number, at: number) => number
+  halfWidth: (i: number, at: number) => number,
+  pinned: boolean[] = []
 ): number[] {
   const n = angles.length;
   if (n < 2) return angles.slice();
@@ -80,9 +81,17 @@ function spread(
       if (j === 0) gap += 360;
       const need = (hw[k] + hw[j]) * fit;
       if (gap < need - 1e-6) {
-        const push = (need - gap) / 2;
-        pos[k] -= push;
-        pos[j] += push;
+        // A pinned item stays put; its neighbour takes the whole push.
+        const pk = pinned[order[k].i];
+        const pj = pinned[order[j].i];
+        if (pk && pj) continue;
+        const push = need - gap;
+        if (pk) pos[j] += push;
+        else if (pj) pos[k] -= push;
+        else {
+          pos[k] -= push / 2;
+          pos[j] += push / 2;
+        }
         moved = true;
       }
     }
@@ -332,22 +341,40 @@ const CircleChart: Component<ChartProps> = (props) => {
     }));
   };
 
-  // Custom markers (e.g. arudhas): a ring of their own just outside the
-  // house numbers.
+  // Custom markers (e.g. arudhas): a ring of their own outside the house
+  // numbers, clear of the As / Ds labels. A marker at a sign's 0° is placed by
+  // sign (e.g. sign-based arudhas), so it sits mid-sign inside its house
+  // rather than on the house line.
   const markers = () => {
     const ms = props.customMarkers ?? [];
-    const r = rInner() + 11 * fs();
+    const r = rInner() + 27 * fs();
+    // The As / Ds labels near this ring, as fixed obstacles.
+    const axes = axisLabels();
+    const texts = [...ms.map((m) => m.label), ...axes.map((l) => l.name)];
     const at = spread(
-      ms.map((m) => norm(m.position)),
+      [
+        ...ms.map((m) => {
+          const p = norm(m.position);
+          return Math.abs(p % 30) < 1e-6 ? p + 15 : p;
+        }),
+        ...axes.map((l) => l.nameAt),
+      ],
       // Called synchronously, within this (tracked) layout.
       // eslint-disable-next-line solid/reactivity
       (i, a) => {
+        // An axis label blocks from its line across its own width, so a
+        // marker settles on the open side of both.
+        if (i >= ms.length) {
+          const l = axes[i - ms.length];
+          return Math.abs(l.lon - l.nameAt) + 1.5;
+        }
         const t = angle(a);
         const ext =
-          (detailsWidth(ms[i].label) + 4) * Math.abs(Math.sin(t)) +
-          10 * fs() * Math.abs(Math.cos(t));
+          (detailsWidth(texts[i]) + 6) * Math.abs(Math.sin(t)) +
+          12 * fs() * Math.abs(Math.cos(t));
         return ((ext / 2 / r) * 180) / Math.PI;
-      }
+      },
+      [...ms.map(() => false), ...axes.map(() => true)]
     );
     return ms.map((m, i) => ({ ...m, at: at[i], r }));
   };
