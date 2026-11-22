@@ -193,9 +193,10 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
           return (
             <g>
               <Show when={props.showHouseLabels ?? true}>
+                {/* Tucked into the corner, clear of a full cell's top row. */}
                 <text
-                  x={center().x - cellWidth() * 0.3}
-                  y={center().y - cellHeight() * 0.3}
+                  x={center().x - cellWidth() * 0.38}
+                  y={center().y - cellHeight() * 0.34}
                   text-anchor="middle"
                   class="house-label"
                 >
