@@ -22,6 +22,7 @@ const VedicChart: Component<VedicChartProps> = (props) => {
     tags: props.tags,
     ascendantDetails: props.ascendantDetails,
     customMarkers: props.customMarkers,
+    rowSpacing: props.rowSpacing,
   });
 
   return (

@@ -108,6 +108,7 @@ function MyChart() {
 | `showHouseLabels`   | `boolean`              | `true`       | Show zodiac sign numbers in houses              |
 | `planetDisplayMode` | `'symbols' \| 'names'` | `'symbols'`  | How to display planets                          |
 | `allowKetuOverride` | `boolean`              | `false`      | Allow manual Ketu positioning                   |
+| `rowSpacing`        | `number`               | `1`          | Scale for the gap between label rows in a house |
 
 ### Planet Positions Interface
 

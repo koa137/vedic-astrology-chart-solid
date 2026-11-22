@@ -58,6 +58,10 @@ export interface VedicChartProps extends VedicChartData {
   /** Extra labelled points to draw on the wheel (by whole sign), stacked under
    *  the planets in each house — e.g. arudha padas or special lagnas. */
   customMarkers?: CustomMarker[];
+  /** Scales the gap between the stacked label rows in a house: 1 (the
+   *  default) is the normal spacing, 1.2 is 20% roomier. Useful where a
+   *  platform's fonts render taller. */
+  rowSpacing?: number;
 }
 
 export interface HouseInfo {
