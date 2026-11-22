@@ -58,24 +58,24 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
     return signNumber;
   };
 
-  // South Indian chart - 1st house at bottom-right, anti-clockwise progression
-  const getHousePosition = (houseNum: number) => {
-    const positions: { [key: number]: { row: number; col: number } } = {
-      1: { row: 3, col: 3 }, // Bottom-right corner (1st house/Ascendant)
-      2: { row: 3, col: 2 }, // Left adjacent to 1st house
-      3: { row: 3, col: 1 }, // Continue left
-      4: { row: 3, col: 0 }, // Bottom-left corner
-      5: { row: 2, col: 0 }, // Left column, up from 4th
-      6: { row: 1, col: 0 }, // Continue up left column
-      7: { row: 0, col: 0 }, // Top-left corner
-      8: { row: 0, col: 1 }, // Top row, right from 7th
-      9: { row: 0, col: 2 }, // Continue right top row
-      10: { row: 0, col: 3 }, // Top-right corner
-      11: { row: 1, col: 3 }, // Right column, down from 10th
-      12: { row: 2, col: 3 }, // Continue down right column, adjacent up from 1st
-    };
-    return positions[houseNum] || { row: 3, col: 3 };
-  };
+  // South Indian chart: each sign has a fixed cell (Pisces top-left, the
+  // signs running clockwise), and the houses follow the lagna's sign.
+  const SIGN_CELLS: { row: number; col: number }[] = [
+    { row: 0, col: 1 }, // Aries
+    { row: 0, col: 2 }, // Taurus
+    { row: 0, col: 3 }, // Gemini
+    { row: 1, col: 3 }, // Cancer
+    { row: 2, col: 3 }, // Leo
+    { row: 3, col: 3 }, // Virgo
+    { row: 3, col: 2 }, // Libra
+    { row: 3, col: 1 }, // Scorpio
+    { row: 3, col: 0 }, // Sagittarius
+    { row: 2, col: 0 }, // Capricorn
+    { row: 1, col: 0 }, // Aquarius
+    { row: 0, col: 0 }, // Pisces
+  ];
+  const getHousePosition = (houseNum: number) =>
+    SIGN_CELLS[getHouseSignNumber(houseNum) - 1];
 
   const getCellCenter = (row: number, col: number) => ({
     x: col * cellWidth() + cellWidth() / 2,
@@ -162,7 +162,7 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
                   text-anchor="middle"
                   class="house-label"
                 >
-                  {getHouseSignNumber(num)}
+                  {num}
                 </text>
               </Show>
 
