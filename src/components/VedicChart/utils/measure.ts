@@ -15,6 +15,14 @@ function textWidth(text: string, font: string): number {
   return measureCtx.measureText(text).width;
 }
 
+/** How far right of its origin a text's ink starts (a glyph's left side
+ *  bearing: Arial's "1" starts well inside its box). */
+function inkStart(text: string, font: string): number {
+  if (!text || !measureCtx) return 0;
+  measureCtx.font = font;
+  return -measureCtx.measureText(text).actualBoundingBoxLeft || 0;
+}
+
 // The labels' font scale: the `--vedic-font-scale` custom property the
 // stylesheet sizes them by (set on the document root).
 export function fontScale(): number {
@@ -33,6 +41,19 @@ export const detailsWidth = (details: string): number =>
   textWidth(details, `${10 * fontScale()}px Arial, sans-serif`);
 const tagWidth = (tag: string): number =>
   textWidth(tag, `${6.5 * fontScale()}px Arial, sans-serif`);
+
+/** Where a superscript tag starts, from the start of the details: over the
+ *  ink of their first character (past the leading space), so a tag sits
+ *  flush over "1°…" as it does over "3°…". */
+export const tagOffset = (details: string, tag: string): number => {
+  const lead = details.match(/^\s*/)?.[0] ?? '';
+  const first = details.charAt(lead.length);
+  return (
+    detailsWidth(lead) +
+    inkStart(first, `${10 * fontScale()}px Arial, sans-serif`) -
+    inkStart(tag.charAt(0), `${6.5 * fontScale()}px Arial, sans-serif`)
+  );
+};
 
 /** How far a superscript tag rises above the label's baseline (px). */
 export const tagRise = (): number => 9 * fontScale();

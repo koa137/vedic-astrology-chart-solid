@@ -8,7 +8,7 @@ import {
   normalizePlanetaryPositions,
 } from '../../utils';
 import { formatAscendantDegree, getAscendantSign } from './utils/helpers';
-import { detailsWidth, labelBlock, tagRise } from './utils/measure';
+import { labelBlock, tagOffset, tagRise } from './utils/measure';
 import '../../styles/vedic-chart.css';
 
 type ChartProps = Omit<VedicChartProps, 'style'> & {
@@ -469,7 +469,13 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
                         <Show when={tagOf(planetName)}>
                           <tspan
                             class="planet-tag"
-                            x={detailsX() + detailsWidth(' ')}
+                            x={
+                              detailsX() +
+                              tagOffset(
+                                detailsOf(planetName as PlanetName),
+                                tagOf(planetName)
+                              )
+                            }
                             dy={-tagRise()}
                           >
                             {tagOf(planetName)}

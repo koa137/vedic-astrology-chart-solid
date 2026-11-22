@@ -8,7 +8,7 @@ import {
   normalizePlanetaryPositions, // Add this import
 } from '../../utils';
 import { formatAscendantDegree, getAscendantSign } from './utils/helpers';
-import { detailsWidth, labelBlock, tagRise } from './utils/measure';
+import { labelBlock, tagOffset, tagRise } from './utils/measure';
 import '../../styles/vedic-chart.css';
 
 type ChartProps = Omit<VedicChartProps, 'style'> & {
@@ -241,7 +241,7 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
                       <Show when={tag()}>
                         <tspan
                           class="planet-tag"
-                          x={detailsX() + detailsWidth(' ')}
+                          x={detailsX() + tagOffset(details(), tag())}
                           dy={-tagRise()}
                         >
                           {tag()}
