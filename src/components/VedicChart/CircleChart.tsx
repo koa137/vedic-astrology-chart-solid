@@ -5,7 +5,13 @@ import {
   getPlanetDisplay,
   normalizePlanetaryPositions,
 } from '../../utils';
-import { detailsWidth, fontScale, symbolWidth } from './utils/measure';
+import {
+  GLYPH_FONT,
+  detailsWidth,
+  fontScale,
+  glyphFit,
+  symbolWidth,
+} from './utils/measure';
 import '../../styles/vedic-chart.css';
 
 type ChartProps = Omit<VedicChartProps, 'style'> & {
@@ -54,7 +60,8 @@ const norm = (x: number) => ((x % 360) + 360) % 360;
  *  moves as little as possible; returns them in input order. */
 function spread(
   angles: number[],
-  halfWidth: (i: number, at: number) => number
+  halfWidth: (i: number, at: number) => number,
+  pinned: boolean[] = []
 ): number[] {
   const n = angles.length;
   if (n < 2) return angles.slice();
@@ -74,9 +81,17 @@ function spread(
       if (j === 0) gap += 360;
       const need = (hw[k] + hw[j]) * fit;
       if (gap < need - 1e-6) {
-        const push = (need - gap) / 2;
-        pos[k] -= push;
-        pos[j] += push;
+        // A pinned item stays put; its neighbour takes the whole push.
+        const pk = pinned[order[k].i];
+        const pj = pinned[order[j].i];
+        if (pk && pj) continue;
+        const push = need - gap;
+        if (pk) pos[j] += push;
+        else if (pj) pos[k] -= push;
+        else {
+          pos[k] -= push / 2;
+          pos[j] += push / 2;
+        }
         moved = true;
       }
     }
@@ -86,6 +101,48 @@ function spread(
   order.forEach((o, k) => (out[o.i] = pos[k]));
   return out;
 }
+
+/** A lone symbol (☉, ♂, ♈…), as opposed to a name like "Su" or "Gu". */
+const isGlyph = (t: string) => {
+  const chars = [...t.replace(TEXT_STYLE, '')];
+  return chars.length === 1 && (chars[0].codePointAt(0) ?? 0) > 0x2000;
+};
+
+/** A symbol drawn in the shared glyph font, its ink fitted to a `box`-pixel
+ *  square centred on `at`. */
+const Glyph: Component<{
+  text: string;
+  at: { x: number; y: number };
+  box: number;
+  class?: string;
+  inner?: string;
+  clickable?: boolean;
+  onContextMenu?: (e: { preventDefault: () => void }) => void;
+}> = (p) => {
+  const fit = () => glyphFit(p.text, p.box);
+  return (
+    <text
+      x={p.at.x + fit().dx}
+      y={p.at.y + fit().dy}
+      class={p.class}
+      style={p.clickable ? { cursor: 'context-menu' } : undefined}
+      onContextMenu={(e) => p.onContextMenu?.(e)}
+    >
+      <tspan
+        class={p.inner}
+        // Symbols are drawn at their own weight: bold (from the planet
+        // labels) would be synthesised and look heavy.
+        style={{
+          'font-family': GLYPH_FONT,
+          'font-size': `${fit().size}px`,
+          'font-weight': 'normal',
+        }}
+      >
+        {p.text}
+      </tspan>
+    </text>
+  );
+};
 
 /** A circular, Western-style wheel: the zodiac in an outer ring with the
  *  ascendant at 9 o'clock and the signs running counterclockwise, whole-sign
@@ -124,8 +181,11 @@ const CircleChart: Component<ChartProps> = (props) => {
 
   // The wheel turns so `ascendant` sits on the left; longitudes increase
   // counterclockwise.
+  // The wheel turns so the 1st house's start (0° of the ascendant's sign)
+  // sits at 9 o'clock; longitudes increase counterclockwise.
+  const start = () => Math.floor(norm(props.ascendant) / 30) * 30;
   const point = (lon: number, r: number) => {
-    const a = Math.PI + ((lon - props.ascendant) * Math.PI) / 180;
+    const a = Math.PI + ((lon - start()) * Math.PI) / 180;
     return { x: cx() + r * Math.cos(a), y: cy() - r * Math.sin(a) };
   };
 
@@ -173,11 +233,17 @@ const CircleChart: Component<ChartProps> = (props) => {
   };
 
   // A label is a stack of lines from the rim inward: name, tag, details.
-  type Line = { text: string; cls?: string; w: number; h: number };
+  // `glyph`: draw the text as a fitted symbol in a square this many pixels.
+  type Line = {
+    text: string;
+    cls?: string;
+    w: number;
+    h: number;
+    glyph?: number;
+  };
   const rName = () => rSign() - 15 * fs();
   // Screen angle (radians) of a longitude.
-  const angle = (lon: number) =>
-    Math.PI + ((lon - props.ascendant) * Math.PI) / 180;
+  const angle = (lon: number) => Math.PI + ((lon - start()) * Math.PI) / 180;
 
   // Each line's radius at a given angle: far enough inward to clear the line
   // before it in whichever direction the stack runs (down at the top and
@@ -211,11 +277,10 @@ const CircleChart: Component<ChartProps> = (props) => {
     return (hw * 180) / Math.PI;
   };
 
-  const nameLine = (text: string): Line => ({
-    text,
-    w: symbolWidth(text) * (mode() === 'symbols' ? 1.6 : 1.15),
-    h: (mode() === 'symbols' ? 20 : 14) * fs(),
-  });
+  const nameLine = (text: string): Line =>
+    isGlyph(text)
+      ? { text, glyph: 16 * fs(), w: 16 * fs(), h: 16 * fs() }
+      : { text, w: symbolWidth(text) * 1.15, h: 14 * fs() };
   const tagLine = (text: string): Line => ({
     text,
     cls: 'planet-tag',
@@ -233,8 +298,9 @@ const CircleChart: Component<ChartProps> = (props) => {
       ? {
           text: SIGN_GLYPHS[s] + TEXT_STYLE,
           cls: `wheel-sign-token ${signClass(s)}`,
-          w: 13 * fs(),
-          h: 13 * fs(),
+          glyph: 10 * fs(),
+          w: 10 * fs(),
+          h: 10 * fs(),
         }
       : {
           text: SIGN_ABBRS[s],
@@ -243,10 +309,9 @@ const CircleChart: Component<ChartProps> = (props) => {
           h: 10.5 * fs(),
         };
 
-  // Where each label sits: bodies and the ascendant spread together so none
-  // overlap.
+  // Where each body's label sits, spread so none overlap. (The ascendant is
+  // marked by its axis instead, labelled at the rim and the inner circle.)
   const layout = () => {
-    const asc = norm(props.lagnaMarker ?? props.ascendant);
     const items = [
       ...bodies().map((b) => {
         const tag = props.tags?.[b.name] ?? '';
@@ -262,13 +327,6 @@ const CircleChart: Component<ChartProps> = (props) => {
           ],
         };
       }),
-      {
-        key: '__asc',
-        lon: asc,
-        retro: false,
-        isAsc: true,
-        lines: [nameLine('As'), ...detailLines(props.ascendantDetails, asc)],
-      },
     ];
     const shown = spread(
       items.map((it) => it.lon),
@@ -283,24 +341,100 @@ const CircleChart: Component<ChartProps> = (props) => {
     }));
   };
 
-  // Custom markers (e.g. arudhas): a ring of their own just outside the
-  // house numbers.
+  // Custom markers (e.g. arudhas): a ring of their own outside the house
+  // numbers, clear of the As / Ds labels. A marker at a sign's 0° is placed by
+  // sign (e.g. sign-based arudhas), so it sits mid-sign inside its house
+  // rather than on the house line.
   const markers = () => {
     const ms = props.customMarkers ?? [];
-    const r = rInner() + 11 * fs();
+    const r = rInner() + 27 * fs();
+    // The As / Ds labels near this ring, as fixed obstacles.
+    const axes = axisLabels();
+    const texts = [...ms.map((m) => m.label), ...axes.map((l) => l.name)];
     const at = spread(
-      ms.map((m) => norm(m.position)),
+      [
+        ...ms.map((m) => {
+          const p = norm(m.position);
+          return Math.abs(p % 30) < 1e-6 ? p + 15 : p;
+        }),
+        ...axes.map((l) => l.nameAt),
+      ],
       // Called synchronously, within this (tracked) layout.
       // eslint-disable-next-line solid/reactivity
       (i, a) => {
+        // An axis label blocks from its line across its own width, so a
+        // marker settles on the open side of both.
+        if (i >= ms.length) {
+          const l = axes[i - ms.length];
+          return Math.abs(l.lon - l.nameAt) + 1.5;
+        }
         const t = angle(a);
         const ext =
-          (detailsWidth(ms[i].label) + 4) * Math.abs(Math.sin(t)) +
-          10 * fs() * Math.abs(Math.cos(t));
+          (detailsWidth(texts[i]) + 6) * Math.abs(Math.sin(t)) +
+          12 * fs() * Math.abs(Math.cos(t));
         return ((ext / 2 / r) * 180) / Math.PI;
-      }
+      },
+      [...ms.map(() => false), ...axes.map(() => true)]
     );
     return ms.map((m, i) => ({ ...m, at: at[i], r }));
+  };
+
+  // The ascendant–descendant axis's labels: each end's degree at the rim, on
+  // the 12th/6th-house side of the line, and its name (with the ascendant's
+  // details on the other side) at the inner end.
+  const rRim = () => (R() + rScale()) / 2;
+  // The rim label's radius: in the zodiac ring, pulled in so a wide label
+  // stays inside the rim.
+  const rimR = (lon: number, w: number) => {
+    const a = angle(lon);
+    const reach =
+      (w * Math.abs(Math.cos(a)) + 11 * fs() * Math.abs(Math.sin(a))) / 2;
+    return Math.min(rRim(), R() - reach - 3);
+  };
+  const rAxisName = () => rInner() + 12 * fs();
+  // The angle (degrees) that clears a w×h label of the line at radius r.
+  const clear = (lon: number, r: number, w: number, h: number) => {
+    const a = angle(lon);
+    const ext = w * Math.abs(Math.sin(a)) + h * Math.abs(Math.cos(a));
+    return ((ext / 2 + 4 * fs()) / r) * (180 / Math.PI);
+  };
+  const axisLabels = () => {
+    const asc = norm(props.lagnaMarker ?? props.ascendant);
+    // Both ends share a degree; take it from the ascendant (lon + 180 can
+    // round to the minute below).
+    const degree = formatDegree(asc % 30);
+    return [0, 180].map((off) => {
+      const lon = norm(asc + off);
+      const dw = detailsWidth(degree) * 1.15;
+      const name = off === 0 ? 'As' : 'Ds';
+      const details = off === 0 ? props.ascendantDetails : undefined;
+      return {
+        lon,
+        degree,
+        name,
+        cls: off === 0 ? 'wheel-axis-as' : 'wheel-axis-ds',
+        details,
+        rimAt: lon - clear(lon, rimR(lon, dw), dw, 11 * fs()),
+        rimR: rimR(lon, dw),
+        nameAt: lon - clear(lon, rAxisName(), symbolWidth(name), 12 * fs()),
+        detailsAt:
+          lon + clear(lon, rAxisName(), detailsWidth(details ?? ''), 11 * fs()),
+      };
+    });
+  };
+  // Where a sign's glyph sits: mid-sign, unless an axis label is there, then
+  // toward whichever end of the sign is clearer.
+  const signAt = (s: number) => {
+    const mid = s * 30 + 15;
+    const near = axisLabels().filter(
+      (l) => Math.abs(norm(l.rimAt - mid + 180) - 180) < 9
+    );
+    if (!near.length) return mid;
+    const at = near[0].rimAt;
+    const lo = s * 30 + 5;
+    const hi = s * 30 + 25;
+    const dist = (x: number) => Math.abs(norm(x - at + 180) - 180);
+    return dist(lo) > dist(hi) ? lo : hi;
   };
 
   // Right-click: view the chart from this longitude.
@@ -372,25 +506,41 @@ const CircleChart: Component<ChartProps> = (props) => {
       {/* Signs */}
       <For each={Array.from({ length: 12 }, (_, k) => k)}>
         {(s) => {
-          const p = () => point(s * 30 + 15, (R() + rScale()) / 2);
+          const p = () => point(signAt(s), (R() + rScale()) / 2);
           return (
-            <text
-              x={p().x}
-              y={p().y}
-              text-anchor="middle"
-              dominant-baseline="central"
-              class={[
-                'sign-label',
-                `sign-${SIGN_ABBRS[s].toLowerCase()}`,
-                signClass(s),
-              ]}
-              style={clickable()}
-              onContextMenu={(e) => select(e, s * 30)}
+            <Show
+              when={mode() === 'symbols'}
+              fallback={
+                <text
+                  x={p().x}
+                  y={p().y}
+                  text-anchor="middle"
+                  dominant-baseline="central"
+                  class={[
+                    'sign-label',
+                    `sign-${SIGN_ABBRS[s].toLowerCase()}`,
+                    signClass(s),
+                  ]}
+                  style={clickable()}
+                  onContextMenu={(e) => select(e, s * 30)}
+                >
+                  {SIGN_ABBRS[s]}
+                </text>
+              }
             >
-              {mode() === 'symbols'
-                ? SIGN_GLYPHS[s] + TEXT_STYLE
-                : SIGN_ABBRS[s]}
-            </text>
+              <Glyph
+                text={SIGN_GLYPHS[s] + TEXT_STYLE}
+                at={p()}
+                box={17 * fs()}
+                class={[
+                  'sign-label',
+                  `sign-${SIGN_ABBRS[s].toLowerCase()}`,
+                  signClass(s),
+                ].join(' ')}
+                onContextMenu={(e) => select(e, s * 30)}
+                clickable={!!props.onSelectLagna}
+              />
+            </Show>
           );
         }}
       </For>
@@ -418,21 +568,61 @@ const CircleChart: Component<ChartProps> = (props) => {
         </For>
       </Show>
 
-      {/* The ascendant's axis, across the house-number ring */}
-      {(() => {
-        const asc = () => norm(props.lagnaMarker ?? props.ascendant);
-        const a = () => point(asc(), rInner());
-        const b = () => point(asc(), rCore());
-        return (
-          <line
-            x1={a().x}
-            y1={a().y}
-            x2={b().x}
-            y2={b().y}
-            class="wheel-asc-line"
-          />
-        );
-      })()}
+      {/* The ascendant–descendant axis: bold lines from the inner circle out
+          through the zodiac ring. */}
+      <For each={[0, 180]}>
+        {(off) => {
+          const lon = () => norm(props.lagnaMarker ?? props.ascendant) + off;
+          const a = () => point(lon(), R());
+          const b = () => point(lon(), rCore());
+          return (
+            <line
+              x1={a().x}
+              y1={a().y}
+              x2={b().x}
+              y2={b().y}
+              class={['wheel-asc-line', { 'wheel-dsc-line': off === 180 }]}
+            />
+          );
+        }}
+      </For>
+      <For each={axisLabels()}>
+        {(l) => (
+          <>
+            {/* The degree at the rim, beside the line */}
+            <text
+              x={point(l.rimAt, l.rimR).x}
+              y={point(l.rimAt, l.rimR).y}
+              text-anchor="middle"
+              dominant-baseline="central"
+              class="wheel-axis-degree"
+            >
+              {l.degree}
+            </text>
+            {/* As / Ds at the inner end, with the ascendant's details below */}
+            <text
+              x={point(l.nameAt, rAxisName()).x}
+              y={point(l.nameAt, rAxisName()).y}
+              text-anchor="middle"
+              dominant-baseline="central"
+              class={['wheel-axis-name', l.cls]}
+            >
+              {l.name}
+            </text>
+            <Show when={l.details}>
+              <text
+                x={point(l.detailsAt, rAxisName()).x}
+                y={point(l.detailsAt, rAxisName()).y}
+                text-anchor="middle"
+                dominant-baseline="central"
+                class="planet-details wheel-axis-details"
+              >
+                {l.details}
+              </text>
+            </Show>
+          </>
+        )}
+      </For>
 
       {/* Bodies and the ascendant label */}
       <For each={layout()}>
@@ -454,40 +644,52 @@ const CircleChart: Component<ChartProps> = (props) => {
               style={clickable()}
               onContextMenu={(e) => select(e, it.lon)}
             >
-              <line
-                x1={tickA().x}
-                y1={tickA().y}
-                x2={tickB().x}
-                y2={tickB().y}
-                class="wheel-pointer"
-              />
-              <Show when={moved()}>
+              <Show when={!it.isAsc}>
                 <line
-                  x1={tickB().x}
-                  y1={tickB().y}
-                  x2={lead().x}
-                  y2={lead().y}
-                  class="wheel-pointer wheel-leader"
+                  x1={tickA().x}
+                  y1={tickA().y}
+                  x2={tickB().x}
+                  y2={tickB().y}
+                  class="wheel-pointer"
                 />
+                <Show when={moved()}>
+                  <line
+                    x1={tickB().x}
+                    y1={tickB().y}
+                    x2={lead().x}
+                    y2={lead().y}
+                    class="wheel-pointer wheel-leader"
+                  />
+                </Show>
               </Show>
               <For each={it.lines}>
-                {(l, k) => (
-                  <text
-                    x={point(it.at, it.radii[k()]).x}
-                    y={point(it.at, it.radii[k()]).y}
-                    text-anchor="middle"
-                    dominant-baseline="central"
-                    class={k() === 0 ? undefined : l.cls}
-                  >
-                    {k() === 0 ? (
-                      <tspan class={it.isAsc ? undefined : 'planet-symbol'}>
-                        {l.text}
-                      </tspan>
-                    ) : (
-                      l.text
-                    )}
-                  </text>
-                )}
+                {(l, k) =>
+                  l.glyph ? (
+                    <Glyph
+                      text={l.text}
+                      at={point(it.at, it.radii[k()])}
+                      box={l.glyph}
+                      class={k() === 0 ? undefined : l.cls}
+                      inner={k() === 0 ? 'planet-symbol' : undefined}
+                    />
+                  ) : (
+                    <text
+                      x={point(it.at, it.radii[k()]).x}
+                      y={point(it.at, it.radii[k()]).y}
+                      text-anchor="middle"
+                      dominant-baseline="central"
+                      class={k() === 0 ? undefined : l.cls}
+                    >
+                      {k() === 0 ? (
+                        <tspan class={it.isAsc ? undefined : 'planet-symbol'}>
+                          {l.text}
+                        </tspan>
+                      ) : (
+                        l.text
+                      )}
+                    </text>
+                  )
+                }
               </For>
             </g>
           );

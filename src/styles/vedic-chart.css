@@ -219,7 +219,11 @@
 }
 .vedic-chart .wheel-asc-line {
   stroke: #333333;
-  stroke-width: 2.5;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.vedic-chart .wheel-dsc-line {
+  stroke-width: 2;
 }
 .vedic-chart .wheel-pointer {
   stroke: currentColor;
@@ -235,18 +239,9 @@
 .vedic-chart .vedic-chart-circle .planet-symbol {
   font-size: calc(14px * var(--vedic-font-scale, 1));
 }
-.vedic-chart .vedic-chart-circle.wheel-symbols .planet-symbol {
-  font-size: calc(20px * var(--vedic-font-scale, 1));
-}
-.vedic-chart .vedic-chart-circle.wheel-symbols .sign-label {
-  font-size: calc(19px * var(--vedic-font-scale, 1));
-}
 /* A sign in a label's details (3° ♒ 24'). */
 .vedic-chart .vedic-chart-circle .wheel-sign-token {
   font-size: calc(10px * var(--vedic-font-scale, 1));
-}
-.vedic-chart .vedic-chart-circle.wheel-symbols .wheel-sign-token {
-  font-size: calc(13px * var(--vedic-font-scale, 1));
 }
 /* Signs coloured by element. */
 .vedic-chart .sign-fire {
@@ -260,4 +255,15 @@
 }
 .vedic-chart .sign-water {
   fill: #2f62c9;
+}
+/* The ascendant–descendant axis's labels. */
+.vedic-chart .wheel-axis-degree {
+  font-size: calc(11px * var(--vedic-font-scale, 1));
+  font-weight: bold;
+  fill: #333333;
+}
+.vedic-chart .wheel-axis-name {
+  font-size: calc(10px * var(--vedic-font-scale, 1));
+  font-weight: bold;
+  fill: #333333;
 }
