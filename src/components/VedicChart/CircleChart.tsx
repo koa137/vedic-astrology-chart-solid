@@ -40,6 +40,10 @@ const SIGN_ABBRS = [
   'Aqu',
   'Pis',
 ];
+// Each sign's element, for its colour: Aries fire, Taurus earth, Gemini air,
+// Cancer water, and round again.
+const ELEMENTS = ['fire', 'earth', 'air', 'water'];
+const signClass = (s: number) => `sign-${ELEMENTS[s % 4]}`;
 // Text presentation, so the glyphs aren't drawn as emoji.
 const TEXT_STYLE = '︎';
 
@@ -99,6 +103,22 @@ const CircleChart: Component<ChartProps> = (props) => {
   const rSign = () => R() * 0.84; // inner edge of the zodiac ring
   const rInner = () => R() * 0.4; // outer edge of the house-number ring
   const rCore = () => R() * 0.28; // the empty centre
+  // Outer edge of the degree scale (its 10° ticks).
+  const rScale = () => rSign() + R() * 0.045;
+
+  // One path of ticks: every `step` degrees (1 → the fine ones, skipping
+  // multiples of 5; 5 → the 5° and longer 10° ones), skipping sign cusps.
+  const ticks = (step: number) => {
+    let d = '';
+    for (let lon = 0; lon < 360; lon += step) {
+      if (lon % 30 === 0 || (step === 1 && lon % 5 === 0)) continue;
+      const len = R() * (lon % 10 === 0 ? 0.045 : lon % 5 === 0 ? 0.03 : 0.016);
+      const a = point(lon, rSign());
+      const b = point(lon, rSign() + len);
+      d += `M${a.x.toFixed(2)} ${a.y.toFixed(2)}L${b.x.toFixed(2)} ${b.y.toFixed(2)}`;
+    }
+    return d;
+  };
 
   const mode = () => props.planetDisplayMode || 'symbols';
 
@@ -138,21 +158,19 @@ const CircleChart: Component<ChartProps> = (props) => {
     // A lone glyph (☉, ♂…) in text style, not emoji.
     return [...s].length === 1 ? s + TEXT_STYLE : s;
   };
-  const detailTokens = (name: string, lon: number): string[] => {
-    const d = props.details?.[name];
-    return (d !== undefined ? d : formatDegree(lon % 30))
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean);
+  // A label's details, a line each: the given details split on spaces, or by
+  // default degree, sign and minutes (3° ♒ 24').
+  const detailLines = (given: string | undefined, lon: number): Line[] => {
+    if (given !== undefined)
+      return given.trim().split(/\s+/).filter(Boolean).map(detailLine);
+    const [deg, min] = formatDegree(norm(lon) % 30).split('°');
+    const s = Math.floor(norm(lon) / 30);
+    return [
+      detailLine(`${deg}°`),
+      signLine(s),
+      ...(min ? [detailLine(min)] : []),
+    ];
   };
-  const ascTokens = () =>
-    (props.ascendantDetails !== undefined
-      ? props.ascendantDetails
-      : formatDegree(norm(props.lagnaMarker ?? props.ascendant) % 30)
-    )
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean);
 
   // A label is a stack of lines from the rim inward: name, tag, details.
   type Line = { text: string; cls?: string; w: number; h: number };
@@ -195,8 +213,8 @@ const CircleChart: Component<ChartProps> = (props) => {
 
   const nameLine = (text: string): Line => ({
     text,
-    w: symbolWidth(text) * (mode() === 'symbols' ? 1.4 : 1.15),
-    h: (mode() === 'symbols' ? 17 : 14) * fs(),
+    w: symbolWidth(text) * (mode() === 'symbols' ? 1.6 : 1.15),
+    h: (mode() === 'symbols' ? 20 : 14) * fs(),
   });
   const tagLine = (text: string): Line => ({
     text,
@@ -210,6 +228,20 @@ const CircleChart: Component<ChartProps> = (props) => {
     w: detailsWidth(text),
     h: 10.5 * fs(),
   });
+  const signLine = (s: number): Line =>
+    mode() === 'symbols'
+      ? {
+          text: SIGN_GLYPHS[s] + TEXT_STYLE,
+          cls: `wheel-sign-token ${signClass(s)}`,
+          w: 13 * fs(),
+          h: 13 * fs(),
+        }
+      : {
+          text: SIGN_ABBRS[s],
+          cls: `wheel-sign-token ${signClass(s)}`,
+          w: detailsWidth(SIGN_ABBRS[s]),
+          h: 10.5 * fs(),
+        };
 
   // Where each label sits: bodies and the ascendant spread together so none
   // overlap.
@@ -226,7 +258,7 @@ const CircleChart: Component<ChartProps> = (props) => {
           lines: [
             nameLine(symbolOf(b.name)),
             ...(tag ? [tagLine(tag)] : []),
-            ...detailTokens(b.name, b.lon).map(detailLine),
+            ...detailLines(props.details?.[b.name], b.lon),
           ],
         };
       }),
@@ -235,7 +267,7 @@ const CircleChart: Component<ChartProps> = (props) => {
         lon: asc,
         retro: false,
         isAsc: true,
-        lines: [nameLine('As'), ...ascTokens().map(detailLine)],
+        lines: [nameLine('As'), ...detailLines(props.ascendantDetails, asc)],
       },
     ];
     const shown = spread(
@@ -332,38 +364,26 @@ const CircleChart: Component<ChartProps> = (props) => {
         }}
       </For>
 
-      {/* Degree ticks along the zodiac ring's inner edge: every 5°, longer
-          every 10°. */}
-      <For each={Array.from({ length: 72 }, (_, k) => k * 5)}>
-        {(lon) => {
-          const len = () => (lon % 10 === 0 ? 6 : 3.5) * fs();
-          const a = () => point(lon, rSign());
-          const b = () => point(lon, rSign() + len());
-          return (
-            <Show when={lon % 30 !== 0}>
-              <line
-                x1={a().x}
-                y1={a().y}
-                x2={b().x}
-                y2={b().y}
-                class="chart-lines wheel-tick"
-              />
-            </Show>
-          );
-        }}
-      </For>
+      {/* A graduated scale along the zodiac ring's inner edge: a tick every
+          degree, longer every 5° and 10°. */}
+      <path d={ticks(1)} class="chart-lines wheel-tick wheel-tick-fine" />
+      <path d={ticks(5)} class="chart-lines wheel-tick" />
 
       {/* Signs */}
       <For each={Array.from({ length: 12 }, (_, k) => k)}>
         {(s) => {
-          const p = () => point(s * 30 + 15, (R() + rSign()) / 2);
+          const p = () => point(s * 30 + 15, (R() + rScale()) / 2);
           return (
             <text
               x={p().x}
               y={p().y}
               text-anchor="middle"
               dominant-baseline="central"
-              class={['sign-label', `sign-${SIGN_ABBRS[s].toLowerCase()}`]}
+              class={[
+                'sign-label',
+                `sign-${SIGN_ABBRS[s].toLowerCase()}`,
+                signClass(s),
+              ]}
               style={clickable()}
               onContextMenu={(e) => select(e, s * 30)}
             >

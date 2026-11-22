@@ -107,9 +107,9 @@ counterclockwise, whole-sign houses, and each body at its exact degree (spread a
 they crowd, with a pointer to the true position). `planetDisplayMode` switches planet and
 sign glyphs for two- and three-letter names.
 
-| Symbols | Names, with details and tags |
+| Symbols | Dark palette, with karaka tags |
 | --- | --- |
-| <img src="docs/images/circle.png" width="400" alt="Circular wheel chart of Albert Einstein with planet symbols" /> | <img src="docs/images/circle-details.png" width="400" alt="Circular wheel chart with names, nakshatras and chara karakas, dark theme" /> |
+| <img src="docs/images/circle.png" width="400" alt="Circular wheel chart of Albert Einstein with planet symbols" /> | <img src="docs/images/circle-details.png" width="400" alt="Circular wheel chart with chara karakas, dark theme" /> |
 
 ## API Reference
 
