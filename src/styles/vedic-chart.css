@@ -265,3 +265,14 @@
 .vedic-chart .sign-water {
   fill: #2f62c9;
 }
+/* The ascendant–descendant axis's labels. */
+.vedic-chart .wheel-axis-degree {
+  font-size: calc(11px * var(--vedic-font-scale, 1));
+  font-weight: bold;
+  fill: #333333;
+}
+.vedic-chart .wheel-axis-name {
+  font-size: calc(10px * var(--vedic-font-scale, 1));
+  font-weight: bold;
+  fill: #333333;
+}

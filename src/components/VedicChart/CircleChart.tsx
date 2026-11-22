@@ -243,10 +243,9 @@ const CircleChart: Component<ChartProps> = (props) => {
           h: 10.5 * fs(),
         };
 
-  // Where each label sits: bodies and the ascendant spread together so none
-  // overlap.
+  // Where each body's label sits, spread so none overlap. (The ascendant is
+  // marked by its axis instead, labelled at the rim and the inner circle.)
   const layout = () => {
-    const asc = norm(props.lagnaMarker ?? props.ascendant);
     const items = [
       ...bodies().map((b) => {
         const tag = props.tags?.[b.name] ?? '';
@@ -262,21 +261,9 @@ const CircleChart: Component<ChartProps> = (props) => {
           ],
         };
       }),
-      {
-        key: '__asc',
-        lon: asc,
-        retro: false,
-        isAsc: true,
-        lines: [nameLine('As'), ...detailLines(props.ascendantDetails, asc)],
-      },
     ];
-    // The ascendant's label sits just above its axis line (on the 12th-house
-    // side), not on it.
-    const seeds = items.map((it) =>
-      it.isAsc ? it.lon - halfWidth(it.lines, it.lon) - 1 : it.lon
-    );
     const shown = spread(
-      seeds,
+      items.map((it) => it.lon),
       // Called synchronously, within this (tracked) layout.
       // eslint-disable-next-line solid/reactivity
       (i, at) => halfWidth(items[i].lines, at)
@@ -306,6 +293,64 @@ const CircleChart: Component<ChartProps> = (props) => {
       }
     );
     return ms.map((m, i) => ({ ...m, at: at[i], r }));
+  };
+
+  // The ascendant–descendant axis's labels: each end's degree at the rim, on
+  // the 12th/6th-house side of the line, and its name (with the ascendant's
+  // details on the other side) at the inner end.
+  const rRim = () => (R() + rScale()) / 2;
+  // The rim label's radius: in the zodiac ring, pulled in so a wide label
+  // stays inside the rim.
+  const rimR = (lon: number, w: number) => {
+    const a = angle(lon);
+    const reach =
+      (w * Math.abs(Math.cos(a)) + 11 * fs() * Math.abs(Math.sin(a))) / 2;
+    return Math.min(rRim(), R() - reach - 3);
+  };
+  const rAxisName = () => rInner() + 12 * fs();
+  // The angle (degrees) that clears a w×h label of the line at radius r.
+  const clear = (lon: number, r: number, w: number, h: number) => {
+    const a = angle(lon);
+    const ext = w * Math.abs(Math.sin(a)) + h * Math.abs(Math.cos(a));
+    return ((ext / 2 + 4 * fs()) / r) * (180 / Math.PI);
+  };
+  const axisLabels = () => {
+    const asc = norm(props.lagnaMarker ?? props.ascendant);
+    // Both ends share a degree; take it from the ascendant (lon + 180 can
+    // round to the minute below).
+    const degree = formatDegree(asc % 30);
+    return [0, 180].map((off) => {
+      const lon = norm(asc + off);
+      const dw = detailsWidth(degree) * 1.15;
+      const name = off === 0 ? 'As' : 'Ds';
+      const details = off === 0 ? props.ascendantDetails : undefined;
+      return {
+        lon,
+        degree,
+        name,
+        cls: off === 0 ? 'wheel-axis-as' : 'wheel-axis-ds',
+        details,
+        rimAt: lon - clear(lon, rimR(lon, dw), dw, 11 * fs()),
+        rimR: rimR(lon, dw),
+        nameAt: lon - clear(lon, rAxisName(), symbolWidth(name), 12 * fs()),
+        detailsAt:
+          lon + clear(lon, rAxisName(), detailsWidth(details ?? ''), 11 * fs()),
+      };
+    });
+  };
+  // Where a sign's glyph sits: mid-sign, unless an axis label is there, then
+  // toward whichever end of the sign is clearer.
+  const signAt = (s: number) => {
+    const mid = s * 30 + 15;
+    const near = axisLabels().filter(
+      (l) => Math.abs(norm(l.rimAt - mid + 180) - 180) < 9
+    );
+    if (!near.length) return mid;
+    const at = near[0].rimAt;
+    const lo = s * 30 + 5;
+    const hi = s * 30 + 25;
+    const dist = (x: number) => Math.abs(norm(x - at + 180) - 180);
+    return dist(lo) > dist(hi) ? lo : hi;
   };
 
   // Right-click: view the chart from this longitude.
@@ -377,7 +422,7 @@ const CircleChart: Component<ChartProps> = (props) => {
       {/* Signs */}
       <For each={Array.from({ length: 12 }, (_, k) => k)}>
         {(s) => {
-          const p = () => point(s * 30 + 15, (R() + rScale()) / 2);
+          const p = () => point(signAt(s), (R() + rScale()) / 2);
           return (
             <text
               x={p().x}
@@ -440,6 +485,43 @@ const CircleChart: Component<ChartProps> = (props) => {
             />
           );
         }}
+      </For>
+      <For each={axisLabels()}>
+        {(l) => (
+          <>
+            {/* The degree at the rim, beside the line */}
+            <text
+              x={point(l.rimAt, l.rimR).x}
+              y={point(l.rimAt, l.rimR).y}
+              text-anchor="middle"
+              dominant-baseline="central"
+              class="wheel-axis-degree"
+            >
+              {l.degree}
+            </text>
+            {/* As / Ds at the inner end, with the ascendant's details below */}
+            <text
+              x={point(l.nameAt, rAxisName()).x}
+              y={point(l.nameAt, rAxisName()).y}
+              text-anchor="middle"
+              dominant-baseline="central"
+              class={['wheel-axis-name', l.cls]}
+            >
+              {l.name}
+            </text>
+            <Show when={l.details}>
+              <text
+                x={point(l.detailsAt, rAxisName()).x}
+                y={point(l.detailsAt, rAxisName()).y}
+                text-anchor="middle"
+                dominant-baseline="central"
+                class="planet-details wheel-axis-details"
+              >
+                {l.details}
+              </text>
+            </Show>
+          </>
+        )}
       </For>
 
       {/* Bodies and the ascendant label */}
