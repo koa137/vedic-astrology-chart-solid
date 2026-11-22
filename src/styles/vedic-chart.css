@@ -219,7 +219,11 @@
 }
 .vedic-chart .wheel-asc-line {
   stroke: #333333;
-  stroke-width: 2.5;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.vedic-chart .wheel-dsc-line {
+  stroke-width: 2;
 }
 .vedic-chart .wheel-pointer {
   stroke: currentColor;

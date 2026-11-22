@@ -270,8 +270,13 @@ const CircleChart: Component<ChartProps> = (props) => {
         lines: [nameLine('As'), ...detailLines(props.ascendantDetails, asc)],
       },
     ];
+    // The ascendant's label sits just above its axis line (on the 12th-house
+    // side), not on it.
+    const seeds = items.map((it) =>
+      it.isAsc ? it.lon - halfWidth(it.lines, it.lon) - 1 : it.lon
+    );
     const shown = spread(
-      items.map((it) => it.lon),
+      seeds,
       // Called synchronously, within this (tracked) layout.
       // eslint-disable-next-line solid/reactivity
       (i, at) => halfWidth(items[i].lines, at)
@@ -418,21 +423,24 @@ const CircleChart: Component<ChartProps> = (props) => {
         </For>
       </Show>
 
-      {/* The ascendant's axis, across the house-number ring */}
-      {(() => {
-        const asc = () => norm(props.lagnaMarker ?? props.ascendant);
-        const a = () => point(asc(), rInner());
-        const b = () => point(asc(), rCore());
-        return (
-          <line
-            x1={a().x}
-            y1={a().y}
-            x2={b().x}
-            y2={b().y}
-            class="wheel-asc-line"
-          />
-        );
-      })()}
+      {/* The ascendant–descendant axis: bold lines from the inner circle out
+          through the zodiac ring. */}
+      <For each={[0, 180]}>
+        {(off) => {
+          const lon = () => norm(props.lagnaMarker ?? props.ascendant) + off;
+          const a = () => point(lon(), R());
+          const b = () => point(lon(), rCore());
+          return (
+            <line
+              x1={a().x}
+              y1={a().y}
+              x2={b().x}
+              y2={b().y}
+              class={['wheel-asc-line', { 'wheel-dsc-line': off === 180 }]}
+            />
+          );
+        }}
+      </For>
 
       {/* Bodies and the ascendant label */}
       <For each={layout()}>
@@ -454,21 +462,23 @@ const CircleChart: Component<ChartProps> = (props) => {
               style={clickable()}
               onContextMenu={(e) => select(e, it.lon)}
             >
-              <line
-                x1={tickA().x}
-                y1={tickA().y}
-                x2={tickB().x}
-                y2={tickB().y}
-                class="wheel-pointer"
-              />
-              <Show when={moved()}>
+              <Show when={!it.isAsc}>
                 <line
-                  x1={tickB().x}
-                  y1={tickB().y}
-                  x2={lead().x}
-                  y2={lead().y}
-                  class="wheel-pointer wheel-leader"
+                  x1={tickA().x}
+                  y1={tickA().y}
+                  x2={tickB().x}
+                  y2={tickB().y}
+                  class="wheel-pointer"
                 />
+                <Show when={moved()}>
+                  <line
+                    x1={tickB().x}
+                    y1={tickB().y}
+                    x2={lead().x}
+                    y2={lead().y}
+                    class="wheel-pointer wheel-leader"
+                  />
+                </Show>
               </Show>
               <For each={it.lines}>
                 {(l, k) => (
