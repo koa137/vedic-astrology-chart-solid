@@ -8,12 +8,7 @@ import {
   normalizePlanetaryPositions, // Add this import
 } from '../../utils';
 import { formatAscendantDegree, getAscendantSign } from './utils/helpers';
-import {
-  detailsWidth,
-  labelWidth,
-  symbolWidth,
-  tagRise,
-} from './utils/measure';
+import { detailsWidth, labelBlock, tagRise } from './utils/measure';
 import '../../styles/vedic-chart.css';
 
 type ChartProps = Omit<VedicChartProps, 'style'> & {
@@ -45,6 +40,47 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
         ? ((positions.Rahu ?? 0) + 180) % 360
         : (positions[p] ?? 0);
     return degreeToSign(lon);
+  };
+
+  // A body's label: its symbol, its details (sign and degree unless given),
+  // and any tag above them.
+  const symbolOf = (p: PlanetName) =>
+    getPlanetDisplay(
+      p,
+      props.planetDisplayMode || 'symbols',
+      props.planets,
+      props.showRetrograde ?? true
+    );
+  const detailsOf = (p: PlanetName) =>
+    props.details?.[p] !== undefined
+      ? ` ${props.details[p]}`
+      : ` ${planetSign(p).substring(0, 3)} ${getPlanetDegree(
+          p,
+          props.planets,
+          props.allowKetuOverride || false,
+          props.showRetrograde ?? true
+        )}`;
+  const tagOf = (p: string) => props.tags?.[p] ?? '';
+  const ascDetails = () =>
+    props.ascendantDetails !== undefined
+      ? ` ${props.ascendantDetails}`
+      : ` ${getAscendantSign(props.ascendant)} ${formatAscendantDegree(props.ascendant)}`;
+
+  // A house's labels as one block centred in its cell (ASC included in the
+  // 1st): the symbols in a column as wide as the widest, and every label's
+  // details starting after it, so the degrees line up.
+  const cellBlock = (house: { number: number; planets: string[] }) => {
+    const pos = getHousePosition(house.number);
+    const { column, width } = labelBlock([
+      ...house.planets.map((p) => ({
+        symbol: symbolOf(p as PlanetName),
+        details: detailsOf(p as PlanetName),
+        tag: tagOf(p),
+      })),
+      ...(house.number === 1 ? [{ symbol: 'ASC', details: ascDetails() }] : []),
+    ]);
+    const x = getCellCenter(pos.row, pos.col).x - width / 2;
+    return { x, detailsX: x + column };
   };
 
   const cellWidth = () => (props.width || 600) / 4;
@@ -182,28 +218,13 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
                     return startY() + adjustedIndex * itemSpacing();
                   };
 
-                  const symbol = () =>
-                    getPlanetDisplay(
-                      planetName as PlanetName,
-                      props.planetDisplayMode || 'symbols',
-                      props.planets,
-                      props.showRetrograde ?? true
-                    );
-                  const details = () =>
-                    props.details?.[planetName] !== undefined
-                      ? ` ${props.details[planetName]}`
-                      : ` ${planetSign(planetName as PlanetName).substring(0, 3)} ${getPlanetDegree(
-                          planetName as PlanetName,
-                          props.planets,
-                          props.allowKetuOverride || false,
-                          props.showRetrograde ?? true
-                        )}`;
-                  const tag = () => props.tags?.[planetName] ?? '';
-                  // Centred on the cell, laid out from its left edge so a tag
-                  // can sit above the start of the details.
-                  const startX = () =>
-                    center().x - labelWidth(symbol(), details(), tag()) / 2;
-                  const detailsX = () => startX() + symbolWidth(symbol());
+                  const symbol = () => symbolOf(planetName as PlanetName);
+                  const details = () => detailsOf(planetName as PlanetName);
+                  const tag = () => tagOf(planetName);
+                  // The cell's shared block (see cellBlock), laid out from its
+                  // left edge so a tag can sit above the start of the details.
+                  const startX = () => cellBlock(house()).x;
+                  const detailsX = () => cellBlock(house()).detailsX;
 
                   return (
                     <text
@@ -228,7 +249,7 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
                       </Show>
                       <tspan
                         class="planet-details"
-                        x={tag() ? detailsX() : undefined}
+                        x={detailsX()}
                         dy={tag() ? tagRise() : undefined}
                       >
                         {details()}
@@ -280,19 +301,19 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
           const totalHeight = (totalItems - 1) * itemSpacing;
           const startY = firstHouseCenter.y - totalHeight / 2;
           const ascendantY = startY;
+          // In line with the 1st house's planets (see cellBlock).
+          const block = cellBlock(firstHouse);
 
           return (
             <text
-              x={firstHouseCenter.x}
+              x={block.x}
               y={ascendantY}
-              text-anchor="middle"
+              text-anchor="start"
               class="ascendant-text"
             >
               <tspan>ASC</tspan>
-              <tspan class="planet-details">
-                {props.ascendantDetails !== undefined
-                  ? ` ${props.ascendantDetails}`
-                  : ` ${getAscendantSign(props.ascendant)} ${formatAscendantDegree(props.ascendant)}`}
+              <tspan class="planet-details" x={block.detailsX}>
+                {ascDetails()}
               </tspan>
             </text>
           );

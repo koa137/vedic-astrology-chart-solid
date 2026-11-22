@@ -8,12 +8,7 @@ import {
   normalizePlanetaryPositions,
 } from '../../utils';
 import { formatAscendantDegree, getAscendantSign } from './utils/helpers';
-import {
-  detailsWidth,
-  labelWidth,
-  symbolWidth,
-  tagRise,
-} from './utils/measure';
+import { detailsWidth, labelBlock, tagRise } from './utils/measure';
 import '../../styles/vedic-chart.css';
 
 type ChartProps = Omit<VedicChartProps, 'style'> & {
@@ -252,9 +247,23 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
           ascLongitude()
         )}`;
 
-  // The common left start for every label in a house: centre the block on its
-  // widest label (so a lone planet is centred and stacked planets line up),
-  // clamped so labels can't run off either border.
+  // A house's labels as one block (see labelBlock): its symbol column's width
+  // and its whole width, ASC included in its house.
+  const houseBlock = (house: { number: number; planets: string[] }) =>
+    labelBlock([
+      ...house.planets.map((p) => ({
+        symbol: symbolOf(p as PlanetName),
+        details: detailsOf(p as PlanetName),
+        tag: tagOf(p),
+      })),
+      ...(house.number === ascHouseNumber()
+        ? [{ symbol: 'ASC', details: ascDetails() }]
+        : []),
+    ]);
+
+  // The common left start for every label in a house: centre the block (so a
+  // lone planet is centred and stacked planets line up), clamped so labels
+  // can't run off either border.
   const labelStartX = (house: {
     number: number;
     sign: string;
@@ -262,20 +271,7 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
   }): number => {
     const centroid = planetCentroids().find((c) => c.num === house.number);
     if (!centroid) return 0;
-    let maxW = 0;
-    for (const p of house.planets) {
-      maxW = Math.max(
-        maxW,
-        labelWidth(
-          symbolOf(p as PlanetName),
-          detailsOf(p as PlanetName),
-          tagOf(p)
-        )
-      );
-    }
-    if (house.number === ascHouseNumber()) {
-      maxW = Math.max(maxW, labelWidth('ASC', ascDetails()));
-    }
+    const maxW = houseBlock(house).width;
     const sz = size();
     const pad = sz * 0.015;
     const left = centerX() - sz * 0.5 + pad;
@@ -428,9 +424,10 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
                     // Every label in the house shares one left start (centred on
                     // the widest label, clamped to the borders).
                     const planetX = () => labelStartX(house());
+                    // Every label's details start after the house's symbol
+                    // column, so the degrees line up.
                     const detailsX = () =>
-                      planetX() +
-                      symbolWidth(symbolOf(planetName as PlanetName));
+                      planetX() + houseBlock(house()).column;
 
                     const planetY = () => {
                       const adjustedIndex =
@@ -480,7 +477,7 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
                         </Show>
                         <tspan
                           class="planet-details"
-                          x={tagOf(planetName) ? detailsX() : undefined}
+                          x={detailsX()}
                           dy={tagOf(planetName) ? tagRise() : undefined}
                         >
                           {detailsOf(planetName as PlanetName)}
@@ -547,7 +544,12 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
               class="ascendant-text"
             >
               <tspan>ASC</tspan>
-              <tspan class="planet-details">{ascDetails()}</tspan>
+              <tspan
+                class="planet-details"
+                x={ascendantX + houseBlock(ascHouse).column}
+              >
+                {ascDetails()}
+              </tspan>
             </text>
           );
         })()}
