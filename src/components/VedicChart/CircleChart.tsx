@@ -121,7 +121,13 @@ const Glyph: Component<{
     >
       <tspan
         class={p.inner}
-        style={{ 'font-family': GLYPH_FONT, 'font-size': `${fit().size}px` }}
+        // Symbols are drawn at their own weight: bold (from the planet
+        // labels) would be synthesised and look heavy.
+        style={{
+          'font-family': GLYPH_FONT,
+          'font-size': `${fit().size}px`,
+          'font-weight': 'normal',
+        }}
       >
         {p.text}
       </tspan>
