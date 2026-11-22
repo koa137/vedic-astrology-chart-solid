@@ -200,3 +200,64 @@
      this size, while WebKit (macOS) draws SVG underlines straight anyway. */
   text-decoration: underline;
 }
+
+/* Circle (Western-style) wheel */
+.vedic-chart .sign-label {
+  font-size: calc(13px * var(--vedic-font-scale, 1));
+  fill: #666666;
+  user-select: none;
+}
+.vedic-chart .vedic-chart-circle .wheel-cusp {
+  stroke-opacity: 0.35;
+}
+.vedic-chart .vedic-chart-circle .wheel-tick {
+  stroke-width: 1;
+}
+.vedic-chart .vedic-chart-circle .wheel-tick-fine {
+  stroke-width: 0.6;
+  stroke-opacity: 0.6;
+}
+.vedic-chart .wheel-asc-line {
+  stroke: #333333;
+  stroke-width: 2.5;
+}
+.vedic-chart .wheel-pointer {
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+.vedic-chart .wheel-leader {
+  stroke-width: 0.75;
+  stroke-opacity: 0.5;
+}
+.vedic-chart .wheel-body {
+  color: #666666;
+}
+.vedic-chart .vedic-chart-circle .planet-symbol {
+  font-size: calc(14px * var(--vedic-font-scale, 1));
+}
+.vedic-chart .vedic-chart-circle.wheel-symbols .planet-symbol {
+  font-size: calc(20px * var(--vedic-font-scale, 1));
+}
+.vedic-chart .vedic-chart-circle.wheel-symbols .sign-label {
+  font-size: calc(19px * var(--vedic-font-scale, 1));
+}
+/* A sign in a label's details (3° ♒ 24'). */
+.vedic-chart .vedic-chart-circle .wheel-sign-token {
+  font-size: calc(10px * var(--vedic-font-scale, 1));
+}
+.vedic-chart .vedic-chart-circle.wheel-symbols .wheel-sign-token {
+  font-size: calc(13px * var(--vedic-font-scale, 1));
+}
+/* Signs coloured by element. */
+.vedic-chart .sign-fire {
+  fill: #d6403a;
+}
+.vedic-chart .sign-earth {
+  fill: #3f9a3a;
+}
+.vedic-chart .sign-air {
+  fill: #d98a1c;
+}
+.vedic-chart .sign-water {
+  fill: #2f62c9;
+}

@@ -2,6 +2,7 @@ import { Component } from 'solid-js';
 import { VedicChartProps } from '../../types';
 import NorthIndianChart from './NorthIndianChart';
 import SouthIndianChart from './SouthIndianChart';
+import CircleChart from './CircleChart';
 
 const VedicChart: Component<VedicChartProps> = (props) => {
   const chartProps = () => ({
@@ -29,6 +30,8 @@ const VedicChart: Component<VedicChartProps> = (props) => {
     <div class={['vedic-chart', props.theme]}>
       {(props.style || 'north') === 'north' ? (
         <NorthIndianChart {...chartProps()} />
+      ) : props.style === 'circle' ? (
+        <CircleChart {...chartProps()} />
       ) : (
         <SouthIndianChart {...chartProps()} />
       )}

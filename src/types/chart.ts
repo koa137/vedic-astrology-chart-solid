@@ -3,7 +3,7 @@ import {
   PlanetaryPositionsWithRetrograde,
 } from './planets';
 
-export type ChartStyle = 'north' | 'south';
+export type ChartStyle = 'north' | 'south' | 'circle';
 export type PlanetDisplayMode = 'symbols' | 'names';
 
 /** An arbitrary labelled point ("word") drawn on the wheel at a longitude,

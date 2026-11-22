@@ -77,7 +77,7 @@ function MyChart() {
   return (
     <VedicChart
       {...birthChart}
-      style="north" // or "south"
+      style="north" // or "south" or "circle"
       width={600}
       height={600}
       showHouseLabels={true}
@@ -102,6 +102,15 @@ through the stylesheet's classes (the dark palette from the jyotish-rs app):
 | --- | --- |
 | <img src="docs/images/north-details.png" width="400" alt="North Indian chart with nakshatras and chara karakas, dark theme" /> | <img src="docs/images/south-details.png" width="400" alt="South Indian chart with nakshatras and chara karakas, dark theme" /> |
 
+The circular wheel (`style="circle"`): the ascendant at 9 o'clock, signs running
+counterclockwise, whole-sign houses, and each body at its exact degree (spread apart where
+they crowd, with a pointer to the true position). `planetDisplayMode` switches planet and
+sign glyphs for two- and three-letter names.
+
+| Symbols | Dark palette, with karaka tags |
+| --- | --- |
+| <img src="docs/images/circle.png" width="400" alt="Circular wheel chart of Albert Einstein with planet symbols" /> | <img src="docs/images/circle-details.png" width="400" alt="Circular wheel chart with chara karakas, dark theme" /> |
+
 ## API Reference
 
 ### VedicChart Props
@@ -111,7 +120,7 @@ through the stylesheet's classes (the dark palette from the jyotish-rs app):
 | `planets`           | `PlanetaryPositions`   | **required** | Sidereal planetary positions in degrees (0-360) |
 | `ascendant`         | `number`               | **required** | Sidereal ascendant position in degrees          |
 | `ayanamsa`          | `number`               | optional     | Ayanamsa value (informational only)             |
-| `style`             | `'north' \| 'south'`   | `'north'`    | Chart style format                              |
+| `style`             | `'north' \| 'south' \| 'circle'` | `'north'` | Chart style: North or South Indian, or a circular Western-style wheel |
 | `width`             | `number`               | `600`        | SVG width in pixels                             |
 | `height`            | `number`               | `600`        | SVG height in pixels                            |
 | `showHouseLabels`   | `boolean`              | `true`       | Show zodiac sign numbers in houses              |
