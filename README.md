@@ -1,5 +1,7 @@
 # Vedic Astrology Chart - SolidJS
 
+> **See it in action:** this component draws the charts in [**jyotish-rs**](https://jyotish-rs.netlify.app/), a free Vedic astrology desktop app. → [jyotish-rs.netlify.app](https://jyotish-rs.netlify.app/)
+
 ## Overview
 
 A beautiful SolidJS component for rendering Vedic (Jyotish) astrology charts. Supports both North Indian and South Indian chart formats with accurate whole sign house system calculations.
