@@ -345,11 +345,11 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
 
       {/* House Numbers - scale proportionally */}
       <Show when={props.showHouseLabels ?? true}>
-        <For each={houseNumberPositions()}>
-          {({ x, y, label }) => (
+        <For each={houseNumberPositions()} keyed={false}>
+          {(pos) => (
             <text
-              x={x}
-              y={y}
+              x={pos().x}
+              y={pos().y}
               text-anchor="middle"
               class="house-label"
               style={
@@ -363,10 +363,12 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
                 // chart's cusps (lagna ± 15°) stay intact rather than snapping
                 // to sign boundaries; harmless in whole-sign framing.
                 const degInSign = ((ascLongitude() % 30) + 30) % 30;
-                props.onSelectLagna((parseInt(label, 10) - 1) * 30 + degInSign);
+                props.onSelectLagna(
+                  (parseInt(pos().label, 10) - 1) * 30 + degInSign
+                );
               }}
             >
-              {label}
+              {pos().label}
             </text>
           )}
         </For>
@@ -495,20 +497,24 @@ const NorthIndianChart: Component<ChartProps> = (props) => {
 
                 {/* Custom markers, centred above the planets — a horizontal row
                     so several padas in one house sit side by side. */}
-                <For each={markers()}>
-                  {(m, mi) => (
-                    <text
-                      x={markerX() + (mi() - (markers().length - 1) / 2) * 24}
-                      y={markerRowY()}
-                      text-anchor="middle"
-                      class={['custom-marker-text', m.className]}
-                    >
-                      <tspan>{m.label}</tspan>
-                      <Show when={m.details}>
-                        <tspan class="planet-details"> {m.details}</tspan>
-                      </Show>
-                    </text>
-                  )}
+                <For each={markers()} keyed={false}>
+                  {(m, index) => {
+                    // keyed={false}: the index is a plain number (Solid 2).
+                    const mi: number = index;
+                    return (
+                      <text
+                        x={markerX() + (mi - (markers().length - 1) / 2) * 24}
+                        y={markerRowY()}
+                        text-anchor="middle"
+                        class={['custom-marker-text', m().className]}
+                      >
+                        <tspan>{m().label}</tspan>
+                        <Show when={m().details}>
+                          <tspan class="planet-details"> {m().details}</tspan>
+                        </Show>
+                      </text>
+                    );
+                  }}
                 </For>
               </g>
             </Show>

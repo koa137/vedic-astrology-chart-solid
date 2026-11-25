@@ -586,38 +586,38 @@ const CircleChart: Component<ChartProps> = (props) => {
           );
         }}
       </For>
-      <For each={axisLabels()}>
+      <For each={axisLabels()} keyed={false}>
         {(l) => (
           <>
             {/* The degree at the rim, beside the line */}
             <text
-              x={point(l.rimAt, l.rimR).x}
-              y={point(l.rimAt, l.rimR).y}
+              x={point(l().rimAt, l().rimR).x}
+              y={point(l().rimAt, l().rimR).y}
               text-anchor="middle"
               dominant-baseline="central"
               class="wheel-axis-degree"
             >
-              {l.degree}
+              {l().degree}
             </text>
             {/* As / Ds at the inner end, with the ascendant's details below */}
             <text
-              x={point(l.nameAt, rAxisName()).x}
-              y={point(l.nameAt, rAxisName()).y}
+              x={point(l().nameAt, rAxisName()).x}
+              y={point(l().nameAt, rAxisName()).y}
               text-anchor="middle"
               dominant-baseline="central"
-              class={['wheel-axis-name', l.cls]}
+              class={['wheel-axis-name', l().cls]}
             >
-              {l.name}
+              {l().name}
             </text>
-            <Show when={l.details}>
+            <Show when={l().details}>
               <text
-                x={point(l.detailsAt, rAxisName()).x}
-                y={point(l.detailsAt, rAxisName()).y}
+                x={point(l().detailsAt, rAxisName()).x}
+                y={point(l().detailsAt, rAxisName()).y}
                 text-anchor="middle"
                 dominant-baseline="central"
                 class="planet-details wheel-axis-details"
               >
-                {l.details}
+                {l().details}
               </text>
             </Show>
           </>
@@ -625,26 +625,27 @@ const CircleChart: Component<ChartProps> = (props) => {
       </For>
 
       {/* Bodies and the ascendant label */}
-      <For each={layout()}>
+      <For each={layout()} keyed={false}>
         {(it) => {
           // Pointer from the true degree to the label, when it's been moved.
-          const moved = () => Math.abs(norm(it.at - it.lon + 180) - 180) > 0.5;
-          const tickA = () => point(it.lon, rSign());
-          const tickB = () => point(it.lon, rSign() - 4 * fs());
-          const lead = () => point(it.at, it.radii[0] + 7 * fs());
+          const moved = () =>
+            Math.abs(norm(it().at - it().lon + 180) - 180) > 0.5;
+          const tickA = () => point(it().lon, rSign());
+          const tickB = () => point(it().lon, rSign() - 4 * fs());
+          const lead = () => point(it().at, it().radii[0] + 7 * fs());
           return (
             <g
               class={[
                 'wheel-body',
-                it.isAsc
+                it().isAsc
                   ? 'ascendant-text'
-                  : ['planet-text', `planet-${it.key.toLowerCase()}`],
-                { retrograde: it.retro },
+                  : ['planet-text', `planet-${it().key.toLowerCase()}`],
+                { retrograde: it().retro },
               ]}
               style={clickable()}
-              onContextMenu={(e) => select(e, it.lon)}
+              onContextMenu={(e) => select(e, it().lon)}
             >
-              <Show when={!it.isAsc}>
+              <Show when={!it().isAsc}>
                 <line
                   x1={tickA().x}
                   y1={tickA().y}
@@ -662,34 +663,47 @@ const CircleChart: Component<ChartProps> = (props) => {
                   />
                 </Show>
               </Show>
-              <For each={it.lines}>
-                {(l, k) =>
-                  l.glyph ? (
-                    <Glyph
-                      text={l.text}
-                      at={point(it.at, it.radii[k()])}
-                      box={l.glyph}
-                      class={k() === 0 ? undefined : l.cls}
-                      inner={k() === 0 ? 'planet-symbol' : undefined}
-                    />
-                  ) : (
-                    <text
-                      x={point(it.at, it.radii[k()]).x}
-                      y={point(it.at, it.radii[k()]).y}
-                      text-anchor="middle"
-                      dominant-baseline="central"
-                      class={k() === 0 ? undefined : l.cls}
+              <For each={it().lines} keyed={false}>
+                {(l, index) => {
+                  // keyed={false}: the index is a plain number (Solid 2).
+                  const k: number = index;
+                  // A row is reused when its line changes (index-keyed), so the
+                  // glyph-or-text choice must stay reactive.
+                  return (
+                    <Show
+                      when={l().glyph}
+                      fallback={
+                        <text
+                          x={point(it().at, it().radii[k]).x}
+                          y={point(it().at, it().radii[k]).y}
+                          text-anchor="middle"
+                          dominant-baseline="central"
+                          class={k === 0 ? undefined : l().cls}
+                        >
+                          {k === 0 ? (
+                            <tspan
+                              class={it().isAsc ? undefined : 'planet-symbol'}
+                            >
+                              {l().text}
+                            </tspan>
+                          ) : (
+                            l().text
+                          )}
+                        </text>
+                      }
                     >
-                      {k() === 0 ? (
-                        <tspan class={it.isAsc ? undefined : 'planet-symbol'}>
-                          {l.text}
-                        </tspan>
-                      ) : (
-                        l.text
+                      {(box) => (
+                        <Glyph
+                          text={l().text}
+                          at={point(it().at, it().radii[k])}
+                          box={box()}
+                          class={k === 0 ? undefined : l().cls}
+                          inner={k === 0 ? 'planet-symbol' : undefined}
+                        />
                       )}
-                    </text>
-                  )
-                }
+                    </Show>
+                  );
+                }}
               </For>
             </g>
           );
@@ -697,20 +711,20 @@ const CircleChart: Component<ChartProps> = (props) => {
       </For>
 
       {/* Custom markers */}
-      <For each={markers()}>
+      <For each={markers()} keyed={false}>
         {(m) => {
-          const p = () => point(m.at, m.r);
+          const p = () => point(m().at, m().r);
           return (
             <text
               x={p().x}
               y={p().y}
               text-anchor="middle"
               dominant-baseline="central"
-              class={['custom-marker-text', m.className]}
+              class={['custom-marker-text', m().className]}
             >
-              {m.label}
-              <Show when={m.details}>
-                <tspan class="planet-details"> {m.details}</tspan>
+              {m().label}
+              <Show when={m().details}>
+                <tspan class="planet-details"> {m().details}</tspan>
               </Show>
             </text>
           );

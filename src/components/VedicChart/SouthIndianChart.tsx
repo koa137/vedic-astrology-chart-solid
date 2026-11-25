@@ -262,20 +262,24 @@ const SouthIndianChart: Component<ChartProps> = (props) => {
 
               {/* Custom markers along the cell's bottom edge — a horizontal row
                   so several padas sit side by side, without disturbing planets. */}
-              <For each={markers()}>
-                {(m, mi) => (
-                  <text
-                    x={center().x + (mi() - (markers().length - 1) / 2) * 24}
-                    y={markerY()}
-                    text-anchor="middle"
-                    class={['custom-marker-text', m.className]}
-                  >
-                    <tspan>{m.label}</tspan>
-                    <Show when={m.details}>
-                      <tspan class="planet-details"> {m.details}</tspan>
-                    </Show>
-                  </text>
-                )}
+              <For each={markers()} keyed={false}>
+                {(m, index) => {
+                  // keyed={false}: the index is a plain number (Solid 2).
+                  const mi: number = index;
+                  return (
+                    <text
+                      x={center().x + (mi - (markers().length - 1) / 2) * 24}
+                      y={markerY()}
+                      text-anchor="middle"
+                      class={['custom-marker-text', m().className]}
+                    >
+                      <tspan>{m().label}</tspan>
+                      <Show when={m().details}>
+                        <tspan class="planet-details"> {m().details}</tspan>
+                      </Show>
+                    </text>
+                  );
+                }}
               </For>
             </g>
           );
